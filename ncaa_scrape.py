@@ -11,8 +11,8 @@ from bs4 import BeautifulSoup
 import requests
 import numpy as np
 import metrics 
+
 #LOOKUP PATHS
-#note: I have these in MongoDB, but pulling from these files for ease of use atm
 SCHOOL_ID_LU_PATH = 'data/schools.parquet'
 SEASON_ID_LU_PATH = 'data/seasons.parquet'
 PLAYERS_HISTORY_LU_PATH = 'data/players_history.parquet'
@@ -85,23 +85,22 @@ def get_roster(school, season, headers = {'User-Agent':'Mozilla/5.0'}):
     except:
         return f'''could not retrieve {season} roster for {school}'''
 
-def get_multiyear_roster(school_id, start, end, request_timeout=0.1):
+def get_multiyear_roster(school, start, end, request_timeout=0.1):
     """
     Returns: concatenated DataFrame using get_roster across [start, end]
     """
-    seasons = pd.read_csv(SEASON_ID_LU_PATH)
+    seasons = pd.read_parquet(SEASON_ID_LU_PATH)
     roster = pd.DataFrame()
-    for year in range(start, end+1):
-        new = get_roster(school_id, year) 
-        new['season'] = year
-        new['school_id'] = school_id
+    for season in range(start, end+1):
+        new = get_roster(school, season) 
+        new['season'] = season
+        new['school'] = school
         if 'height' in new.columns: 
             new = new.drop(columns = ['height'])
         roster = pd.concat([roster, new])
         time.sleep(random.uniform(0, request_timeout))
         
     roster = pd.merge(roster, seasons, how = 'left', on = 'season')
-    roster = roster.rename(columns={'id':'season_id'})
     try: 
         res = roster.drop(columns=['Unnamed: 0'])
     except: 
@@ -175,7 +174,6 @@ def get_career_stats(stats_player_seq, variant, headers = {'User-Agent':'Mozilla
         print('no records found')
         return pd.DataFrame()
 
-    
 def format_names(original):
     """
     A helper function to turn names from 
@@ -318,7 +316,6 @@ def transform_career_stats(df):
     if 'App' in cols: 
         df['App'] = df['App'].astype('int64')
     return df
-
 
 def get_team_stats(school, season, variant, headers={'User-Agent':'Mozilla/5.0'}):
     """
@@ -638,8 +635,6 @@ def lookup_player_id(name, school, player_lu = PLAYER_LU_PATH):
     else: 
         return school_id
         
-
-### ARCHIVE ###
 def get_conference_records(conference, show_progress = True, print_interval = 5, request_timeout = 0.1):
     """
     Returns a table of all season records for players in a given conference
@@ -732,112 +727,3 @@ def build_roster_db(school_id_lu_path = SCHOOL_ID_LU_PATH, season_id_lu_path = S
         res.to_csv(save_as, index=False)
     return res
 
-def get_team_records(school_id, start, end, show_progress = True, print_interval = 10, request_timeout = 0.1):
-    """
-    Returns a table of all career season records of players who played for a given team within start, end interval
-    
-    Inputs
-    ----
-    conference (str)
-    show_progress (bool): If True, prints progress of function call
-    (default: True)
-    print_interval (int): If show_progress, the interval between progress updates
-    outputs 
-    request_timeout (float): length in seconds between successive calls to database
-    
-    Outputs
-    -----
-    DataFrame 
-    """
-    # getting roster
-    roster = get_multiyear_roster(school_id, start, end, request_timeout)
-    df = roster.groupby(by='stats_player_seq').agg('first').reset_index()
-    print('roster acquired')
-    num_calls = len(df)
-    
-    res = pd.DataFrame()
-    for index, row in df.iterrows():
-        try:
-            new = get_career_stats(stats_player_seq = row['stats_player_seq'], season_id = row['season_id'], school_id = row['school_id'])
-            new['school_id'] = row['school_id']
-            new['stats_player_seq'] = row['stats_player_seq']
-            new['name'] = row['name']
-        except:
-            print('failure: '+str(row['name'])+' ('+ str(row['stats_player_seq'])+') | season: '+str(row['season'])+' ('+str(row['season_id'])+') | school_id: '+' ('+str(row['school_id'])+')')
-            new = pd.DataFrame()
-            new['school_id'] = row['school_id']
-            new['stats_player_seq'] = row['stats_player_seq']
-            new['name'] = row['name']
-        res = pd.concat([res, new])
-        time.sleep(random.uniform(0, request_timeout))
-    return res.reset_index()
-
-def get_career_stats_old(stats_player_seq, season_id, school_id, headers = {'User-Agent':'Mozilla/5.0'}):
-    """
-    Transmits GET request to stats.ncaa.org, parses career stats  into DataFrame
-
-    Inputs
-    -----
-    player_id (int)
-    season_id (int)
-    team_id (int)
-    headers (dict): to include with GET request. NCAA is not kind to robots
-    (default: {'User-Agent':'Mozilla/5.0'})
-
-
-    Outputs
-    -----
-    DataFrame indexed by stats_seq_id, season_id
-    
-    https://stats.ncaa.org/player/index?id=15204&org_id=746&stats_player_seq=2306451&year_stat_category_id=14761
-    
-    """
-    # craft GET request to NCAA site    
-    payload = {'game_sport_year_ctl_id':str(season_id), 'stats_player_seq':str(stats_player_seq), 'org_id':str(school_id)}
-    url = 'https://stats.ncaa.org/player/game_by_game'
-    # send request
-    try:
-        r = requests.get(url, params = payload, headers = headers)
-    except:
-        print('An error occurred with the GET Request')
-        if r.status_code == 403:
-            print('403 Error: NCAA blocked request')
-        return pd.DataFrame()
-    
-    try: 
-        # parse data
-        soup = BeautifulSoup(r.text, features = 'lxml')
-        table = soup.find_all('table')[2]
-
-        # get table headers
-        headers = []
-        for val in table.find_all('th'):
-            headers.append(val.string.strip())
-
-        # get table data
-        rows = []
-        row = []
-        for val in table.find_all('td'): # TODO: cleanup as much as possible
-            # data is also encoded in data-order attr of td elements
-            if 'data-order' in val.attrs:
-                row.append(val['data-order'])
-            elif val.a is not None:
-                row.append(val.a.attrs['href'].split('/')[2])
-            elif val.string.strip() != 'Career' and 'width' not in val.attrs:
-                if row != []:
-                    rows.append(row)
-                row = []
-                row.append(val.string.strip())
-            else:
-                if val.string.strip() != 'Career':
-                    row.append(val.string.strip())
-
-        # Turn into DataFrame
-        df = pd.DataFrame(rows)
-        df.columns = headers
-        df = transform_career_stats(df)
-        return df
-    except: 
-        print('no records found')
-        return pd.DataFrame()
-    
