@@ -31,19 +31,15 @@ _WEIGHTS_DF = load_linear_weights()
 
 def load_season_weights(season):
     """
-    
-    Args: 
-        season: can be a season (int, YYYY) or season_id (int)
+    Args:
+        season (int, YYYY): valid 2013-2022
     
     Returns: 
-            
+        Dataframe
     """
-    input_length = len(str(season))
-    if input_length == 4: 
-        # season is YYYY
-        return _WEIGHTS_DF.loc[_WEIGHTS_DF['season'] == int(season)]
-    else: # season is season_id:
-        return _WEIGHTS_DF.loc[_WEIGHTS_DF['seasonID'] == int(season)]   
+    _WEIGHTS_DF = load_linear_weights()
+    res = _WEIGHTS_DF.loc[_WEIGHTS_DF['season'] == int(season)]
+    return res
 
 def _calculate_pa(row):
     """
@@ -191,12 +187,6 @@ def calculate_wrc_manual(plate_appearances, woba, season):
 def add_batting_metrics(df):
     """
     Adds the following columns to a given DataFrame:
-  
-  
-    Args: 
-    
-    
-    Returns: 
     
         PA 
         1B 
@@ -205,6 +195,7 @@ def add_batting_metrics(df):
         SLG
         OPS
         ISO
+        PA/HR
         K
         BB
         BABIP
@@ -223,8 +214,11 @@ def add_batting_metrics(df):
                                   + 4 * df['HR']) /df['AB'], ROUND_TO)
         df.loc[:, 'OPS'] = round(df['OBP'] + df['SLG'], ROUND_TO)
         df.loc[:, 'ISO'] = round(df['SLG'] - df['BA'], ROUND_TO)
+        df.loc[:, 'HR%'] = round(df['HR'] / df['PA'], ROUND_TO)
         df.loc[:, 'K%'] = round(df['K'] / df['PA'], ROUND_TO)
+        # df.loc[:, 'K%'] = round(df['K'] / df['PA'], ROUND_TO)*100
         df.loc[:, 'BB%'] = round(df['BB'] / df['PA'], ROUND_TO)
+        # df.loc[:, 'BB%'] = round(df['BB'] / df['PA'], ROUND_TO)*100
         df.loc[:, 'BABIP'] = round((df['H'] - df['HR']) \
                                    / (df['AB'] - df['K'] - df['HR'] \
                                       + df['SF']), ROUND_TO)
@@ -264,10 +258,8 @@ def _calculate_fip(row):
     """
     if row['App'] > 0:
         season_weights = load_season_weights(row['season'])
-        return round(((13 * row['HR-A'] 
-                    + 3 * (row['BB'] + row['HB'])
-                    - 2 * row['SO']) / row['IP-adj']) \
-                     + season_weights['cFIP'].values[0], 3)
+        res = round(((13 * row['HR-A'] + 3 * (row['BB'] + row['HB']) - 2 * row['SO']) / row['IP-adj']) + season_weights['cFIP'].values[0], 3)
+        return res
     else: 
         print('no records found')
         return 0.00
@@ -285,10 +277,7 @@ def calculate_fip_manual(HR, BB, HP, K, IP, cFIP):
     """
     if row['App'] > 0:
         season_weights = load_season_weights(row['season'])
-        return round(((13 * row['HR-A'] 
-                    + 3 * (row['BB'] + row['HB'])
-                    - 2 * row['SO']) / row['IP-adj']) \
-                     + season_weights['cFIP'].values[0], 3)
+        return round(((13 * row['HR-A'] + 3 * (row['BB'] + row['HB']) - 2 * row['SO']) / row['IP-adj']) + season_weights['cFIP'].values[0], ROUND_TO)
     else: 
         print('no records found')
         return 0.00
@@ -313,9 +302,14 @@ def add_pitching_metrics(df):
         BB/9
         BABIP-against
         FIP
-
+        ERA
+        WHIP
+        IP/App
+        PA/HR
+        Pitches/PA
     """
     df = df.loc[df.IP > 0]
+    df = df.loc[df.season >= 2013]
     try:
         df.loc[:, 'IP-adj'] = df.apply(_adjust_innings_pitched, axis = 1)
         df.loc[:, '1B-A'] = df['H']-df['HR-A']-df['3B-A']-df['2B-A']
@@ -344,6 +338,11 @@ def add_pitching_metrics(df):
                                               - df['HR-A'] + df['SFA']), \
                                            ROUND_TO)
         df.loc[:, 'FIP'] = df.apply(_calculate_fip, axis=1)
+        df.loc[:, 'WHIP'] = round((df['H']+df['BB']) / df['IP-adj'], ROUND_TO)
+        df.loc[:, 'IP/App'] = round(df['IP-adj'] / df['App'], ROUND_TO)
+        df.loc[:, 'Pitches/IP'] = round(df['Pitches'] / df['IP-adj'], ROUND_TO)
+        df.loc[:, 'HR-A/PA'] = round(df['HR-A'] / df['BF'], ROUND_TO)
+        df.loc[:, 'Pitches/PA'] = round(df['Pitches'] / df['BF'], ROUND_TO)
         return df.sort_values(by='FIP', ascending=True)
     except: 
         print('no records found')

@@ -22,16 +22,20 @@ def calculate_actual_win_pct(school, games):
         The actual (i.e. experimental) winning percentage as a float
     """
     if len(games) > 0: 
-        res = len(games[games.run_difference > 0]) / len(games)
+        wins = len(games[games.run_difference > 0])
+        ties = len(games[games.run_difference == 0])
+        losses = len(games[games.run_difference < 0])
+        wins_and_losses = len(games[games.run_difference != 0])
+        res = wins / wins_and_losses
     else: 
         res = 0
-    return round(res, _ROUND_TO)
+    return round(res, _ROUND_TO), wins, ties, losses
 
 def calculate_pythagenpat_win_pct(school, games):
     """
     A function to calculate the the PythagenPat expectated winning percentage.
     Pythagenpat Expectation formula (developed by David Smyth and Patriot): 
-    
+    ;
         W% = R^x/(R^x + RA^x)
         where x = (RPG)^.287
         Developed by David Smyth and Patriot
@@ -48,7 +52,8 @@ def calculate_pythagenpat_win_pct(school, games):
     runs_scored_total = games.runs_scored.sum()
     runs_allowed_total = games.runs_allowed.sum()
     games_played_total = len(games) 
-
+    total_run_difference = runs_scored_total - runs_allowed_total 
+    
     if len(games) == 0: 
         res = 0 
     else: 
@@ -56,5 +61,6 @@ def calculate_pythagenpat_win_pct(school, games):
         x = runs_per_game ** 0.287
         numerator = (runs_scored_total ** x)
         demoninator = (runs_scored_total ** x) + (runs_allowed_total ** x)
-        res = numerator / denominator
-    return round(res, _ROUND_TO)
+        res = numerator / demoninator
+        
+    return round(res, _ROUND_TO), total_run_difference

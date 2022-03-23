@@ -14,7 +14,7 @@ import numpy as np
 #LOOKUP PATHS
 _SCHOOL_ID_LU_PATH = 'collegebaseball/data/schools.parquet'
 _SEASON_ID_LU_PATH = 'collegebaseball/data/seasons.parquet'
-_PLAYER_HISTORY_LU_PATH = 'collegebaseball/data/players_history_new.parquet'
+_PLAYER_HISTORY_LU_PATH = 'collegebaseball/data/players_history_new_3.parquet'
 _PLAYER_LU_PATH = 'collegebaseball/data/player_seasons.csv'
 
 #GET request options
@@ -48,7 +48,7 @@ def get_roster(school, season):
         school_id = school 
     elif type(school) is str: 
         school_id = lookup_school_id(school)
-       
+      
     # handling season/season_id input types
     if len(str(season)) == 4: 
         season_id = lookup_season_id(season)
@@ -98,6 +98,10 @@ def get_roster(school, season):
                     
         df = pd.DataFrame(res)
         df.columns = col_names
+        df.stats_player_seq = df.stats_player_seq.astype('str')
+        df.stats_player_seq = df.stats_player_seq.str.replace('=', '')
+        df = df.loc[df.stats_player_seq != 'None']
+        df.stats_player_seq = df.stats_player_seq.astype('int64')
         return df
     except:
         print(f'''could not retrieve {season} roster for {school}''')
@@ -149,13 +153,14 @@ def get_career_stats(stats_player_seq, variant):
     """
     # craft GET request to NCAA site
     season = lookup_seasons_played(stats_player_seq)[0]
-    season_ids = lookup_season_ids(season)
+    season_ids = lookup_season_ids(int(season))
     season_id = season_ids[0]
     
     if variant == 'batting': 
         year_stat_category_id = season_ids[1]
     else: 
         year_stat_category_id = season_ids[2]
+    
     payload = {'id':str(season_id), 'stats_player_seq':str(stats_player_seq), \
                'year_stat_category_id':str(year_stat_category_id)}
     url = 'https://stats.ncaa.org/player/index'
@@ -247,6 +252,13 @@ def _eliminate_dashes(df):
     df.replace('-  ', 0.00, inplace=True)
     return df 
 
+def _parse_season(year):
+    """
+    """
+    last_two = year[5:]
+    res = 2000 + int(last_two)
+    return res
+
 def _transform_career_stats(df):
     """
     A helper function to transform raw data loaded from ncaa with 
@@ -259,10 +271,10 @@ def _transform_career_stats(df):
         DataFrame indexed by stats_player_seq, season_id
     """
     df = _eliminate_dashes(df)
-    df.fillna(value = 0.00, inplace = True)
+    df.fillna(value = 0.00, inplace=True)
     cols = df.columns
     if 'Player' in cols: 
-            df = df.rename(columns={'Player':'name'})
+        df = df.rename(columns={'Player':'name'})
     if 'name' in cols:     
         df.name = df.name.apply(_format_names)
     if 'stats_player_seq' in cols: 
@@ -270,8 +282,9 @@ def _transform_career_stats(df):
         df.stats_player_seq = df.stats_player_seq.str.replace(r'\D+', '')
     if 'Year' in cols: 
         df['Year'] = df['Year'].astype('string')
-        df['season'] = df['Year'].str[:4]
-        df.drop(columns=['Year'], inplace=True)
+        df['season'] = df.Year.apply(_parse_season)
+        df = df.drop(columns=['Year'])
+        cols = df.columns
     if 'season' in cols:
         df['season'] = df['season'].astype('int64')
     if 'Team' in cols:
@@ -349,10 +362,41 @@ def _transform_career_stats(df):
     if 'OPP DP' in cols: 
         df['OPP DP'] = df['OPP DP'].astype('int64')
     if 'Pitches' in cols: 
-        df['Pitches'] = df['Pitches'].str.replace(',','')
-        df['Pitches'] = df['Pitches'].astype('int64')
+        try: 
+            df['Pitches'] = df['Pitches'].str.replace(',','')
+            df['Pitches'] = df['Pitches'].astype('float64')
+        except: 
+            df['Pitches'] = df['Pitches'].astype('float64')
     if 'App' in cols: 
         df['App'] = df['App'].astype('int64')
+    if 'SHO' in cols: 
+        df['SHO'] = df['SHO'].astype('int64')
+    if 'Bk' in cols: 
+        df['Bk'] = df['Bk'].astype('int64')
+    if 'WP' in cols: 
+        df['WP'] = df['WP'].astype('int64')
+    if 'ER' in cols: 
+        df['ER'] = df['ER'].astype('int64')
+    if 'SV' in cols: 
+        df['SV'] = df['SV'].astype('int64')
+    if 'ERA' in cols: 
+        df['ERA'] = df['ERA'].astype('float64')
+    if 'Inh Run' in cols: 
+        df['Inh Run'] = df['Inh Run'].astype('int64')
+    if 'GO' in cols: 
+        df['GO'] = df['GO'].astype('int64')
+    if 'FO' in cols: 
+        df['FO'] = df['FO'].astype('int64')
+    if 'W' in cols: 
+        df['W'] = df['W'].astype('int64')
+    if 'L' in cols: 
+        df['L'] = df['L'].astype('int64')
+    if 'KL' in cols: 
+        df['KL'] = df['KL'].astype('int64')
+    if 'Inh Run Score' in cols: 
+        df['Inh Run Score'] = df['Inh Run Score'].astype('int64')
+    if 'pickoffs' in cols: 
+        df['pickoffs'] = df['pickoffs'].astype('int64')
     return df
 
 def get_team_stats(school, season, variant):
@@ -532,9 +576,11 @@ def _transform_team_stats(df, variant):
             df.drop(columns=['SlgPct'], inplace=True)
     else:
         if 'ERA' in cols: 
-            df.drop(columns=['ERA'], inplace=False)
+            df['ERA'] = df['ERA'].astype('float64')
         if 'IP' in cols: 
             df['IP'] = df['IP'].astype('float64')       
+        if 'GS' in cols: 
+            df.drop(columns=['GS'], inplace=True)
         if 'CG' in cols: 
             df['CG'] = df['CG'].astype('int64')      
         if 'IP' in cols: 
@@ -663,9 +709,9 @@ def lookup_seasons_played(stats_player_seq):
     
     """
     df = pd.read_parquet(_PLAYER_HISTORY_LU_PATH)
-    row = df.loc[df.player_id == stats_player_seq]
+    row = df.loc[df.stats_player_seq == stats_player_seq]
     return row['debut_season'].values[0], row['season_last'].values[0]
-    
+         
 def lookup_school_id(school):
     """
     A school_id lookup function
@@ -718,7 +764,7 @@ def lookup_player_id(player_name, school):
     player_row = player_row.loc[df.school_id == school_id]
         
     if len(player_row) == 0:
-        return f'''could not find player {name}'''
+        return f'''could not find player {player_name}'''
     else: 
         return player_row['player_id'].values[0]
         
