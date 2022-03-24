@@ -1,4 +1,6 @@
 """
+ncaa_scraper 
+
 A module to scrape and parse college baseball statistics from stats.ncaa.org
 
 Created by Nathan Blumenfeld in Spring 2022
@@ -11,11 +13,17 @@ from bs4 import BeautifulSoup
 import requests
 import numpy as np
 
-#LOOKUP PATHS
+#lookup paths
 _SCHOOL_ID_LU_PATH = 'collegebaseball/data/schools.parquet'
 _SEASON_ID_LU_PATH = 'collegebaseball/data/seasons.parquet'
-_PLAYER_HISTORY_LU_PATH = 'collegebaseball/data/players_history_new_3.parquet'
-_PLAYER_LU_PATH = 'collegebaseball/data/player_seasons.csv'
+_PLAYERS_HISTORY_LU_PATH = 'collegebaseball/data/players_history.parquet'
+_PLAYER_ID_LU_PATH = 'collegebaseball/data/player_id_lookup.parquet'
+
+#pre-load lookup tables for performance
+_SCHOOL_ID_LU_DF = pd.read_parquet(_SCHOOL_ID_LU_PATH)
+_SEASON_LU_DF = pd.read_parquet(_SEASON_ID_LU_PATH)
+_PLAYERS_HISTORY_LU_DF = pd.read_parquet(_PLAYERS_HISTORY_LU_PATH)
+_PLAYER_ID_LU_DF = pd.read_parquet(_PLAYER_ID_LU_PATH)
 
 #GET request options
 _HEADERS = {'User-Agent':'Mozilla/5.0'}
@@ -147,7 +155,8 @@ def get_career_stats(stats_player_seq, variant):
         stats_player_seq (int): the NCAA player_id
         variant (str): the type of stats, either 'batting' or 'pitching
     Returns: 
-        DataFrame 
+        DataFrame with the following columns
+        
     
     data from stats.ncaa.org
     """
@@ -656,8 +665,7 @@ def lookup_season_ids(season):
     Returns:
         tuple of (season_id, batting_id, pitching_id) for desired season
     """
-    lu_df = pd.read_parquet(_SEASON_ID_LU_PATH)
-    season_row = lu_df.loc[lu_df['season'] == season]
+    season_row = _SEASON_LU_DF.loc[_SEASON_LU_DF['season'] == season]
     season_id = season_row.values[0][1]
     batting_id = season_row.values[0][2]
     pitching_id = season_row.values[0][3]  
@@ -674,8 +682,7 @@ def lookup_season_ids_reverse(season_id):
     Returns:
         tuple of (season_id, batting_id, pitching_id) for desired season
     """
-    lu_df = pd.read_parquet(_SEASON_ID_LU_PATH)
-    season_row = lu_df.loc[lu_df['season_id'] == season_id]
+    season_row = _SEASON_LU_DF.loc[_SEASON_LU_DF['season_id'] == season_id]
     season = season_row['season'].values[0]
     batting_id = season_row['batting_id'].values[0]
     pitching_id = season_row['pitching_id'].values[0]
@@ -691,8 +698,7 @@ def lookup_season_id(season):
     Returns: 
         season_id as an int
     """
-    lu_df = pd.read_parquet(_SEASON_ID_LU_PATH)
-    season_row = lu_df.loc[lu_df['season'] == season]
+    season_row = _SEASON_LU_DF.loc[_SEASON_LU_DF['season'] == season]
     season_id = season_row.values[0][1]
     return season_id
 
@@ -708,8 +714,7 @@ def lookup_seasons_played(stats_player_seq):
         tuple of ints: (debut season, most recent season)
     
     """
-    df = pd.read_parquet(_PLAYER_HISTORY_LU_PATH)
-    row = df.loc[df.stats_player_seq == stats_player_seq]
+    row = _PLAYERS_HISTORY_LU_DF.loc[_PLAYERS_HISTORY_LU_DF.stats_player_seq == stats_player_seq]
     return row['debut_season'].values[0], row['season_last'].values[0]
          
 def lookup_school_id(school):
@@ -726,15 +731,34 @@ def lookup_school_id(school):
         lookup_school_id("cornell")
         >>> 167
     """
-    df = pd.read_parquet(_SCHOOL_ID_LU_PATH)
-    school_row = df.loc[(df.ncaa_name == school)]
+    school_row = _SCHOOL_ID_LU_DF.loc[(_SCHOOL_ID_LU_DF.ncaa_name == school)]
     if len(school_row) == 0:
         # try to search against bd_name
-        school_row = df.loc[(df.bd_name == school)]
+        school_row = _SCHOOL_ID_LU_DF.loc[(_SCHOOL_ID_LU_DF.bd_name == school)]
     if len(school_row) == 0: 
         return f'''could not find school {school}'''
     else: 
         return int(school_row['school_id'].values[0])
+        
+def lookup_school_reverse(school_id):
+    """
+    A function to lookup school name from school_id
+
+    Args:
+        school_id as int
+    
+    Returns: 
+        school (str): the name of the school
+        
+    Examples: 
+        lookup_school_id_reverse(167)
+        >>> "Cornell"
+    """
+    school_row = _SCHOOL_ID_LU_DF.loc[(_SCHOOL_ID_LU_DF.school_id == school_id)]
+    if len(school_row) == 0: 
+        return f'''could not find school {school}'''
+    else: 
+        return school_row['ncaa_name'].values[0]
         
 def lookup_player_id(player_name, school):
     """
@@ -742,30 +766,25 @@ def lookup_player_id(player_name, school):
     
     Args: 
         player_name (str): name of player to lookup
-        school: either the name of the school (str) of the player, 
-        or the NCAA school_id (int) of the player's school
+        school: either the ncaa_name of the school (str) of the player
         
     Returns: 
         The player_id of the player as an int
 
     Examples: 
         lookup_player_id("Jake Gelof", "Virginia")
-        >>> 
+        >>> 2486499
     
     """
-    
-    if type(school) is str: 
-        school_id = lookup_school_id(school)
-    else: 
-        school_id = school_id
-    
-    df = pd.read_csv(_PLAYER_LU_PATH)
-    player_row = df.loc[df.name == player_name.title()]
-    player_row = player_row.loc[df.school_id == school_id]
+    #player
+    player_row = _PLAYER_ID_LU_DF.loc[_PLAYER_ID_LU_DF.name == player_name.title()]
+    player_row = player_row.loc[player_row.school == school]
         
     if len(player_row) == 0:
         return f'''could not find player {player_name}'''
     else: 
-        return player_row['player_id'].values[0]
+        return player_row['stats_player_seq'].values[0]
         
 
+
+           

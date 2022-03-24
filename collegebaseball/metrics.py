@@ -1,4 +1,6 @@
 """
+metrics 
+
 A module to calculate additional baseball statistics based on results
 produced with ncaa_scraper module
 
@@ -18,8 +20,20 @@ ROUND_TO = 3
 def load_linear_weights():
     """    
     Returns: 
-        DataFrame of Linear Weights
-        
+        Dataframe with the following columns: 
+            wOBA: lgwOBA (calculated from totals)
+            wOBAScale
+            wBB
+            wHB
+            w1B
+            w2B
+            w3B
+            wHR
+            R/PA
+            RPG
+            cFIP
+            season (primary key)     
+            
     Linear Weights provided by Robert Fray
     n.b. 2022 Season calculated as avg. of previous 5 seasons
     """
@@ -35,17 +49,26 @@ def load_season_weights(season):
         season (int, YYYY): valid 2013-2022
     
     Returns: 
-        Dataframe
+        Single-row Dataframe with the following columns: 
+            wOBA: lgwOBA (calculated from totals)
+            wOBAScale
+            wBB
+            wHB
+            w1B
+            w2B
+            w3B
+            wHR
+            R/PA
+            RPG
+            cFIP
+            season (primary key)
     """
     _WEIGHTS_DF = load_linear_weights()
     res = _WEIGHTS_DF.loc[_WEIGHTS_DF['season'] == int(season)]
     return res
 
 def _calculate_pa(row):
-    """
-    Args: 
-        
-    
+    """    
     Returns:
         The number of plate appearances by a player as an int
         based on the following formula: 
@@ -58,9 +81,7 @@ def _calculate_pa(row):
     return PA
 
 def _calculate_singles(row):
-    """
-    Args: 
-    
+    """    
     Returns:
         The number of singles by a player as an int 
         based on the following formula: 
@@ -71,11 +92,7 @@ def _calculate_singles(row):
     return singles  
 
 def _calculate_woba(row):
-    """
-    Args:
-    
-    Returns: 
-    
+    """            
     """
     if row['PA'] > 0:
         season_weights = load_season_weights(row['season'])
@@ -93,10 +110,23 @@ def _calculate_woba(row):
 def calculate_woba_manual(plate_appearances, walks, hits_by_pitch, singles, \
                           doubles, triples, homeruns, season):
     """
+    Calculates wOBA according to the following formula: 
+    
+    [(wBB * walks) + (wHBP * hits_by_pitch) + (w1B * singles) + (w2B * doubles) \
+    (w3B * triples) + (wHR * homeruns)] / plate_appearances
+        
     Args: 
-    
+        plate_appearances (int)
+        walks (int)
+        hits_by_pitch (int)
+        singles (int)
+        doubles (int)
+        triples (int)
+        homeruns (int)
+        season (int) 
+        
     Returns: 
-    
+        wOBA as a float
     """
     if plate_appearances > 0:
         season_weights = load_season_weights(season)
@@ -113,13 +143,6 @@ def calculate_woba_manual(plate_appearances, walks, hits_by_pitch, singles, \
     
 def _calculate_wraa(row):
     """
-    Args: 
-    
-    Returns:
-        the weighted runs created above average of a player
-        as a float based on the following formula: 
-
-        wRAA = [(wOBA − leagueWOBA) / wOBAscale] ∗ PA
     """
     # get linear weights for given season
     if row['PA'] > 0:
@@ -131,13 +154,16 @@ def _calculate_wraa(row):
         
 def calculate_wraa_manual(plate_appearances, woba,  season):
     """
+    Calculates wRAA based on the following formula: 
+        wRAA = [(wOBA − leagueWOBA) / wOBAscale] ∗ PA
+
     Args: 
+        plate_appearances (int)
+        woba (float)
+        season (int)
     
     Returns:
-        The weighted runs created above average of a player 
-        as a float based on the following formula: 
-
-        wRAA = [(wOBA − leagueWOBA) / wOBAscale] ∗ PA
+        The weighted runs created above average of a player as a float 
     """
     # get linear weights for given season
     if plate_appearances > 0:
@@ -150,7 +176,7 @@ def calculate_wraa_manual(plate_appearances, woba,  season):
 
 def _calculate_wrc(row):
     """
-    Args: 
+    Args:
     
     Returns:
         The weighted runs created of a player as a float
@@ -168,12 +194,16 @@ def _calculate_wrc(row):
     
 def calculate_wrc_manual(plate_appearances, woba, season):
     """
+    Calculates wRC based on the following formula: 
+    wRC = [((wOBA - lgwOBA) / wOBAScale) + (lgR / PA))] * PA
+
     Args: 
+        plate_appearances (int)
+        woba (float)
+        season (int)
     
     Returns: 
-        The weighted runs created by a player based on the following formula: 
-
-        wRC = [((wOBA - lgwOBA) / wOBAScale) + (lgR / PA))] * PA
+        The weighted runs created by a player as a float 
     """
     if plate_appearances > 0:
         season_weights = load_season_weights(season)
@@ -202,6 +232,12 @@ def add_batting_metrics(df):
         wOBA
         wRAA
         wRC
+    
+    Args: 
+        df (DataFrame): the DataFrame to append additional stats to
+        
+    Returns: 
+        DataFrame of stats with additional columns
     """
     df.loc[:, 'PA'] = df.apply(_calculate_pa, axis=1)
     df = df.loc[df.PA > 0]
@@ -232,10 +268,6 @@ def add_batting_metrics(df):
 
 def _adjust_innings_pitched(row):
     """
-    Args: 
-    
-    Returns: 
-    
     Examples: 
         .1 --> 1/3
         .2 --> 2/3 
@@ -250,11 +282,6 @@ def _adjust_innings_pitched(row):
     
 def _calculate_fip(row):
     """
-    Args: 
-        
-    Returns: 
-
-        ((HR x 13) + (3 x (BB + HBP)) - (2 x K)) / IP + cFIP
     """
     if row['App'] > 0:
         season_weights = load_season_weights(row['season'])
@@ -264,16 +291,21 @@ def _calculate_fip(row):
         print('no records found')
         return 0.00
     
-def calculate_fip_manual(HR, BB, HP, K, IP, cFIP):
+def calculate_fip_manual(HR, BB, HP, K, IP):
     """
+    Calculates FIP bases on the following formula: 
+        ((HR x 13) + (3 x (BB + HBP)) - (2 x K)) / IP + cFIP
+
     Args: 
+        HR (int)
+        BB (int)
+        HBP (int)
+        K (int)
+        IP (float)
+        season (int)
         
     Returns: 
-
-        ((HR x 13) + (3 x (BB + HBP)) - (2 x K)) / IP + cFIP
-        
-    Examples: 
-        
+        FIP as a float  
     """
     if row['App'] > 0:
         season_weights = load_season_weights(row['season'])
@@ -286,10 +318,6 @@ def calculate_fip_manual(HR, BB, HP, K, IP, cFIP):
 def add_pitching_metrics(df):
     """
     Adds the following columns to a given DataFrame:
-    
-    Args: 
-    
-    Returns: 
         PA 
         1B-A
         OBP-against
@@ -307,6 +335,12 @@ def add_pitching_metrics(df):
         IP/App
         PA/HR
         Pitches/PA
+        
+    Args: 
+        df (DataFrame): the DataFrame to append additional stats to
+        
+    Returns: 
+        DataFrame of stats with additional columns
     """
     df = df.loc[df.IP > 0]
     df = df.loc[df.season >= 2013]

@@ -1,4 +1,6 @@
 """
+boydsworld_scraper
+
 A scraper module for boydsworld.com historical game results 
 
 Created by Nathan Blumenfeld in November 2021
