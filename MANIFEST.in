@@ -1,2 +1,2 @@
-include collegebaseball/data/*.parquet
+graft collegebaseball/data * 
 include DESCRIPTION.rst

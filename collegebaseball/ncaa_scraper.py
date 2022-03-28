@@ -496,7 +496,7 @@ def _transform_team_stats(df, variant):
         variant: type of stats to transform, either 'batting' or 'pitching'
     
     Returns:
-        DataFrame indexed by stats_player_seq, season_id
+        DataFrame 
     """
     df = _eliminate_dashes(df)
     df.fillna(value = 0.00, inplace = True)
