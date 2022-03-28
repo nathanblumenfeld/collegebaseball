@@ -14,8 +14,5 @@ setuptools.setup(
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-    ],
-    include_package_data=True,
-    package_data={'collegebaseball/data': ['collegebaseball/data/*.parquet']}
-)
+        'Programming Language :: Python :: 3.6'],
+    include_package_data = True)
