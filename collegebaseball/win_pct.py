@@ -38,7 +38,7 @@ def calculate_pythagenpat_win_pct(school, games):
     """
     A function to calculate the the PythagenPat expectated winning percentage.
     Pythagenpat Expectation formula (developed by David Smyth and Patriot): 
-    ;
+    
         W% = R^x/(R^x + RA^x)
         where x = (RPG)^.287
         Developed by David Smyth and Patriot
