@@ -779,7 +779,7 @@ def lookup_school_reverse(school_id):
         school (str): the name of the school
         
     Examples: 
-        lookup_school_id_reverse(167)
+        lookup_school_reverse(167)
         >>> "Cornell"
     """
     school_row = _SCHOOL_ID_LU_DF.loc[(_SCHOOL_ID_LU_DF.school_id == school_id)]
