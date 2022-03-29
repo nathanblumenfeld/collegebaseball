@@ -12,12 +12,13 @@ import random
 from bs4 import BeautifulSoup
 import requests
 import numpy as np
+from collegebaseball import datasets
 
 #lookup paths
-_SCHOOL_ID_LU_PATH = 'collegebaseball/data/schools.parquet'
-_SEASON_ID_LU_PATH = 'collegebaseball/data/seasons.parquet'
-_PLAYERS_HISTORY_LU_PATH = 'collegebaseball/data/players_history.parquet'
-_PLAYER_ID_LU_PATH = 'collegebaseball/data/player_id_lookup.parquet'
+_SCHOOL_ID_LU_PATH = datasets.get_school_table()
+_SEASON_ID_LU_PATH = datasets.get_season_lu_table()
+_PLAYERS_HISTORY_LU_PATH = datasets.get_players_history_table()
+_PLAYER_ID_LU_PATH = datasets.get_player_id_lu_table()
 
 #pre-load lookup tables for performance
 _SCHOOL_ID_LU_DF = pd.read_parquet(_SCHOOL_ID_LU_PATH)
@@ -787,4 +788,4 @@ def lookup_player_id(player_name, school):
         
 
 
-           
+

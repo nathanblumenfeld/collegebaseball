@@ -6,13 +6,14 @@ produced with ncaa_scraper module
 
 created by Nathan Blumenfeld in Spring 2022
 """
+from collegebaseball import datasets
 import pandas as pd
 import numpy as np
 import warnings
 warnings.filterwarnings("ignore")
 
 # filepath of D1 linear weights, provided by Robert Fray
-_LW_FILEPATH = 'collegebaseball/data/d1_linear_weights.parquet'
+_LW_FILEPATH = datasets.get_linear_weights_table()
 
 # number of decimal places to round floats to 
 ROUND_TO = 3

@@ -7,6 +7,8 @@ from .metrics import load_linear_weights, load_season_weights, \
     add_batting_metrics, add_pitching_metrics
 from .boydsworld_scraper import get_games
 from .win_pct import calculate_actual_win_pct, calculate_pythagenpat_win_pct
+from .datasets import get_player_id_lu_table, get_linear_weights_table, \
+     get_players_history_table, get_school_table, get_season_lu_table
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 __author__ = 'Nathan Blumenfeld'
