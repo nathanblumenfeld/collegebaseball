@@ -21,7 +21,8 @@ def calculate_actual_win_pct(school, games):
         games (DataFrame from get_games()): output of getGames() function
         
     Returns: 
-        The actual (i.e. experimental) winning percentage as a float
+        A tuple of (the actual (i.e. experimental) winning percentage as a float, 
+        # of wins as int, # ties as int, and # losses as int)
     """
     if len(games) > 0: 
         wins = len(games[games.run_difference > 0])
@@ -31,7 +32,7 @@ def calculate_actual_win_pct(school, games):
         res = wins / wins_and_losses
     else: 
         res = 0
-    return round(res, _ROUND_TO), wins, ties, losses
+    return round(res, _ROUND_TO), int(wins), int(ties), int(losses)
 
 def calculate_pythagenpat_win_pct(school, games):
     """
@@ -49,7 +50,7 @@ def calculate_pythagenpat_win_pct(school, games):
         end (int, YYYY): season to end at, inclusive
         
     Returns: 
-        expected winning percentage as a float
+        A tuple of (the expected winning percentage as a float, total run differential as int)
     """
     runs_scored_total = games.runs_scored.sum()
     runs_allowed_total = games.runs_allowed.sum()
@@ -65,4 +66,4 @@ def calculate_pythagenpat_win_pct(school, games):
         demoninator = (runs_scored_total ** x) + (runs_allowed_total ** x)
         res = numerator / demoninator
         
-    return round(res, _ROUND_TO), total_run_difference
+    return round(res, _ROUND_TO), int(total_run_difference)
