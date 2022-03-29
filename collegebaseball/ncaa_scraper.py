@@ -158,7 +158,19 @@ def get_career_stats(stats_player_seq, variant):
     Returns: 
         DataFrame with the following columns
         
-    
+        batting
+        -------
+        school_id, GP, BA, G, OBPct, SlgPct, R, AB, H, 2B, 3B, TB, HR,
+        RBI, BB, HBP, SF, SH, K, OPP DP, CS, Picked, SB, IBB, RBI2out,
+        season
+
+        pitching
+        --------
+        school_id, GP, G, App, GS, ERA, IP, CG, H, R, ER,
+        BB, SO, SHO, BF, P-OAB, 2B-A, 3B-A, Bk, HR-A, WP,
+        HB, IBB, Inh Run, Inh Run Score, SHA, SFA, Pitches, GO,
+        FO, W, L, SV, KL, season
+
     data from stats.ncaa.org
     """
     # craft GET request to NCAA site
@@ -172,7 +184,7 @@ def get_career_stats(stats_player_seq, variant):
         year_stat_category_id = season_ids[2]
     
     payload = {'id':str(season_id), 'stats_player_seq':str(stats_player_seq), \
-               'year_stat_category_id':str(year_stat_category_id)}
+        'year_stat_category_id':str(year_stat_category_id)}
     url = 'https://stats.ncaa.org/player/index'
     # send request
     try:
@@ -420,7 +432,22 @@ def get_team_stats(school, season, variant):
         variant (str): the type of stats, either 'batting' or 'pitching'
     
     Returns: 
-        DataFrame
+        DataFrame with the following columns:
+        
+        batting
+        -------
+        Jersey, name, Yr, pos, GP, GS, R, AB, H, 2B, 3B,
+        TB, HR, RBI, BB, HBP, SF, SH, K, OPP DP, CS,
+        Picked, SB, IBB, season
+
+
+        pitching
+        --------
+        Jersey, name, Yr, pos, GP, App, ERA, IP, CG, H, R,
+        ER, BB, SO, SHO, BF, P-OAB, 2B-A, 3B-A, Bk, HR-A,
+        WP, HB, IBB, Inh Run, Inh Run Score, SHA, SFA, Pitches,
+        GO, FO, W, L, SV, KL, pickoffs, season
+
         
     data from stats.ncaa.org
     """
