@@ -1657,3 +1657,15 @@ win_pct.calculate_pythagenpat_win_pct('Cornell', bws.get_games('Cornell', 2015, 
 # expected_win_pct, run differential
 >>> (0.43, -144)
 ```
+
+## Planned Feature Additions
+
+- [ ] Team Schedules
+- [ ] Play-by-Play Data
+- [ ] Linear Weight Calculation Tools
+- [ ] SIERA
+- [ ] Park Factor Calculation Tools
+- [ ] WRC+
+
+If you have more ideas or if you are interested in contributing, please reach out to @blumenfeldnate on twitter or email nathanblumenfeld@gmail.com
+
