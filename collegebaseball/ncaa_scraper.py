@@ -494,7 +494,7 @@ def get_team_stats(school, season, variant):
         rows = []
         row = []
         i = 0
-
+        player_ids = []
         for child in table.find('tr', 'text').find_all_next('td'):
             if i % len(headers) == 0: 
                 row = []
@@ -503,17 +503,26 @@ def get_team_stats(school, season, variant):
                 row.append(str(child['data-order']).strip())
             else:
                 row.append(str(child.string))
+
+            if child.a:
+                if 'href' in child.a.attrs:
+                    player_ids.append(int(child.a.attrs['href'].split('&')[-1].split('=')[-1]))
+                else:
+                    player_ids.append('-')
             i+=1
 
         df = pd.DataFrame(rows)
         df.columns = headers
-        df['season'] = season
         df = df.loc[(df.Player != 'Opponent Totals') & (df.Player != 'Totals')]
+
+        df['season'] = season
+        df['stats_player_seq'] = player_ids
         res = _transform_team_stats(df, variant= variant)
         return res
     except: 
         print(f'''Could not find {season} {variant} stats for {school}''')
         return pd.DataFrame()
+
 
 def _transform_team_stats(df, variant):
     """
