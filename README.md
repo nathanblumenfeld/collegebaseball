@@ -441,7 +441,7 @@ ncaa.get_career_stats(2111707, 'pitching')
 
 
 n.b. get_career_stats cannot take a player name due to potential ambiguities. No worries though, as getting a   
-player_id is easy with lookup_player_id(player_name, school_name). 
+player_id is easy with **lookup_player_id(player_name, school_name)**. 
 
 
 ```python
@@ -586,7 +586,7 @@ ncaa.get_career_stats(player_id, 'batting')
 
 Calculating advanced metrics from these stats is made simple with **add_pitching_metrics** and **add_batting_metrics**. 
 
-Just pass any DataFrame obtained from get_team_stats or get_career_stats.
+Just pass any DataFrame obtained from **get_team_stats** or **get_career_stats**.
 
 
 ```python
@@ -1166,7 +1166,7 @@ metrics.add_batting_metrics(ncaa.get_career_stats(1779078, 'batting')).head()
 
 
 You can get a school's roster with **get_roster**, which takes either school_name/school_id and season/season_id.  
-get_roster also gives the column stats_player_seq (i.e. player_id), which can be quite useful.
+**get_roster** also gives the column stats_player_seq (i.e. player_id), which can be quite useful.
 
 
 ```python
@@ -1465,7 +1465,7 @@ ncaa.get_multiyear_roster('Cornell', 2015, 2018).tail()
 </div>
 
 
-### Finally, there are some lookup functions included to make life easier.  
+There are also some lookup functions included to make life easier.    
 
 You can get a player_id from their name and school with **lookup_player_id**
 
@@ -1517,7 +1517,7 @@ ncaa.lookup_school_id("Cornell")
 ```
 
 
-Also include a scraper for [Boyds World Game Score Database](http://boydsworld.com/data/scores.html) through the **get_games** function.
+collegebaseball also includes a scraper for the [Boyds World Game Score Database](http://boydsworld.com/data/scores.html) through the **get_games** function.
 
 ```python
 from collegebaseball import boydsworld_scraper as bws
@@ -1650,10 +1650,22 @@ win_pct.calculate_actual_win_pct('Cornell', bws.get_games('Cornell', 2015, 2018)
 >>> (0.408, 62, 0, 90)
 ```
 
-and pythagenpat expecting winning percentages from the results of get_games. 
+and pythagenpat expecting winning percentages from the results of **get_games**. 
 
 ```python
 win_pct.calculate_pythagenpat_win_pct('Cornell', bws.get_games('Cornell', 2015, 2018))
 # expected_win_pct, run differential
 >>> (0.43, -144)
 ```
+
+## Planned Feature Additions
+
+- [ ] Team Schedules
+- [ ] Play-by-Play Data
+- [ ] Linear Weight Calculation Tools
+- [ ] SIERA
+- [ ] Park Factor Calculation Tools
+- [ ] WRC+
+
+If you have more ideas or if you are interested in contributing, please reach out to @blumenfeldnate on twitter or email nathanblumenfeld@gmail.com
+

@@ -9,7 +9,7 @@ Created by Nathan Blumenfeld in Spring 2022
 import pandas as pd
 import time
 import random
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
 import requests
 import numpy as np
 from collegebaseball import datasets
@@ -421,6 +421,119 @@ def _transform_career_stats(df):
         df['pickoffs'] = df['pickoffs'].astype('int64')
     return df
 
+def get_game_by_game_stats(school, season, stats_player_seq=None, variant='batting'):
+    """
+    """ 
+    if not stats_player_seq: 
+        stats_player_seq = -100
+    
+    school_id = lookup_school_id(school)
+    season_ids = lookup_season_ids(season)
+    
+    if variant == 'batting':
+        year_stat_category_id = season_ids[1]
+        headers = ['date', 'field', 'season_id', 'opponent_id', 'opponent_name', \
+                'innings_played', 'extras', 'runs_scored', 'runs_allowed', \
+                'result', 'score', 'game_id', 'school_id', 'G', 'R', 'AB', \
+                'H', '2B', '3B', 'TB', 'HR', 'RBI', 'BB', 'HBP', 'SF', 'SH', \
+                'K', 'OPP DP', 'CS', 'Picked', 'SB', 'IBB', 'RBI2out']
+    else: 
+        year_stat_category_id = season_ids[2]
+        headers = ['date', 'field', 'season_id', 'opponent_id', 'opponent_name', \
+                'innings_played', 'extras', 'runs_scored', 'runs_allowed', \
+                'result', 'score', 'game_id', 'school_id', 'App', 'G', 'GS', \
+                'IP', 'CG', 'H', 'R', 'ER', 'BB', 'SO', 'SHO', 'BF', 'P-OAB', \
+                '2B-A', '3B-A', 'Bk', 'HR-A', 'WP', 'HB', 'IBB', 'Inh Run', \
+                'Inh Run Score', 'SHA', 'SFA', 'Pitches', 'GO', 'FO', 'W', 'L', \
+                'SV', 'OrdAppeared', 'KL', 'pickoffs']
+        
+    payload = {'game_sport_year_ctl_id':str(season_ids[0]), 'org_id':str(school_id), \
+        'stats_player_seq':str(stats_player_seq), 'year_stat_category_id':str(year_stat_category_id)}
+    url = 'https://stats.ncaa.org/player/game_by_game?'
+    r = requests.get(url, params=payload, headers=_HEADERS)
+    soup = BeautifulSoup(r.text, features='lxml')
+    table = soup.find_all('table')[3]
+
+    rows = []
+    for val in table.find_all('tr')[3:]: 
+        data = []
+        for i in val.children:
+            if isinstance(i, Tag):
+                if 'data-order' in i.attrs:
+                    data.append(i.get('data-order'))
+                elif i.a:
+                    href = i.find_all('a')[-1].get('href')
+                    if '?' in href:
+                        team_id = href.split('=')[-1]
+                        game_id = href.split('?')[0].split('/')[-1]
+                        score = i.find_all('a')[-1].string.strip()
+                        if 'W' in score: 
+                            result = 'win'
+                            score = score.replace('W', '').strip()
+                        elif 'L' in score: 
+                            result = 'loss'
+                            score = score.replace('L', '').strip()
+                        try:
+                            if '(' in score:
+                                innings_played = score.split('(')[-1].split(')')[0].strip()
+                                extras = 'True'
+                                score = score.split('(')[0].strip()
+                            else: 
+                                innings_played = '9'
+                                extras = 'False'
+                            data.append(innings_played)
+                            data.append(extras)
+                            scores = score.split('-')
+                            runs_scored = scores[0].strip()
+                            runs_allowed = scores[-1].strip()
+                            data.append(runs_scored)
+                            data.append(runs_allowed)
+                        except:
+                            continue
+                        data.append(result)
+                        data.append(score)
+                        data.append(game_id)
+                        data.append(team_id)
+                    else:
+                        season_id = href.split('/')[-1]
+                        opponent_id = href.split('/')[-2]
+                        opponent = i.find_all('a')[-1].string.strip()
+                        if '@' in opponent: 
+                            field = 'away'
+                            opponent = opponent.split('@')[-1].strip()
+                        else: 
+                            field = 'home'
+                        data.append(field)
+                        data.append(season_id)
+                        data.append(opponent_id)
+                        data.append(opponent)
+                else:
+                    date = i.string
+                    if date == 'Opponent Totals':
+                        continue
+                    else:
+                        data.append(date)
+                    
+        if len(data) == len(headers):
+            rows.append(data)          
+    return pd.DataFrame(rows, columns=headers)
+
+def get_results(school, season):
+    """
+    Args:
+        school: schools (str) or NCAA school_id (int) 
+        season: season (int, YYYY) or NCAA season_id (int)
+    
+    Returns: 
+        DataFrame with the following columns:
+
+        game_id, date, field, opponent_name, opponent_id, 
+        innings_played, extras, runs_scored, runs_allowed, result, school_id, season_id
+        
+    """
+    return get_game_by_game_stats(school, season)[['game_id', 'date', 'field', 'opponent_name', 'opponent_id', 'innings_played', 'extras', 'runs_scored', 'runs_allowed', 'result', 'school_id', 'season_id']] 
+    
+    
 def get_team_stats(school, season, variant):
     """
     Obtains single-season batting/pithing stats totals for all players
@@ -438,7 +551,7 @@ def get_team_stats(school, season, variant):
         -------
         Jersey, name, Yr, pos, GP, GS, R, AB, H, 2B, 3B,
         TB, HR, RBI, BB, HBP, SF, SH, K, OPP DP, CS,
-        Picked, SB, IBB, season
+        Picked, SB, IBB, season, stats_player_seq
 
 
         pitching
@@ -446,7 +559,7 @@ def get_team_stats(school, season, variant):
         Jersey, name, Yr, pos, GP, App, ERA, IP, CG, H, R,
         ER, BB, SO, SHO, BF, P-OAB, 2B-A, 3B-A, Bk, HR-A,
         WP, HB, IBB, Inh Run, Inh Run Score, SHA, SFA, Pitches,
-        GO, FO, W, L, SV, KL, pickoffs, season
+        GO, FO, W, L, SV, KL, pickoffs, season, stats_player_seq
 
         
     data from stats.ncaa.org
