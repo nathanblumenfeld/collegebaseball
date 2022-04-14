@@ -1149,7 +1149,6 @@ def lookup_player_reverse(player_id):
         >>> 2486499
     
     """
-    #player
     df = _PLAYER_ID_LU_DF
     player_row = df.loc[df.stats_player_seq == player_id]        
     if len(player_row) == 0:
@@ -1157,16 +1156,3 @@ def lookup_player_reverse(player_id):
     else: 
         return player_row['name'].values[0], player_row['school'].values[0]
         
-def lookup_player_school(player_id):
-    """
-    A function 
-    """
-    try:
-        df = _PLAYER_ID_LU_DF
-        row = df.loc[df.stats_player_seq == player_id]
-        if len(row) < 1: 
-            return
-        else: 
-            return row.school.values[0]
-    except: 
-        return f'''no records found for player_id: {player_id}'''        
