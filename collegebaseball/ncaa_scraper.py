@@ -19,12 +19,14 @@ _SCHOOL_ID_LU_PATH = datasets.get_school_table()
 _SEASON_ID_LU_PATH = datasets.get_season_lu_table()
 _PLAYERS_HISTORY_LU_PATH = datasets.get_players_history_table()
 _PLAYER_ID_LU_PATH = datasets.get_player_id_lu_table()
+_ROSTERS_LU_PATH = datasets.get_rosters_table()
 
 #pre-load lookup tables for performance
 _SCHOOL_ID_LU_DF = pd.read_parquet(_SCHOOL_ID_LU_PATH)
 _SEASON_LU_DF = pd.read_parquet(_SEASON_ID_LU_PATH)
 _PLAYERS_HISTORY_LU_DF = pd.read_parquet(_PLAYERS_HISTORY_LU_PATH)
 _PLAYER_ID_LU_DF = pd.read_parquet(_PLAYER_ID_LU_PATH)
+_ROSTERS_DF = pd.read_parquet(_ROSTERS_LU_PATH)
 
 #GET request options
 _HEADERS = {'User-Agent':'Mozilla/5.0'}
@@ -76,8 +78,7 @@ def get_gbg_stats(school=None, player=None, season=None, variant='batting'):
     if player:
         if type(player) == int:
             player_id = player
-            player_name, school_name = lookup_player_reverse(player)
-            school_id = lookup_school_id(school_name) 
+            player_name, school_name, school_id = lookup_player_reverse(player_id, season)
         elif type(player) == str: 
             player_name = player
             if school:
@@ -127,7 +128,6 @@ def get_gbg_stats(school=None, player=None, season=None, variant='batting'):
                 'run_difference', 'result', 'score', 'game_id', 'school_id', \
                 'AB', 'H', 'TB', 'R', '2B', '3B', 'HR', 'RBI', 'BB', 'HBP', \
                 'SF', 'SH', 'K', 'DP', 'SB', 'CS', 'Picked', 'IBB', 'stats_player_seq']
-        
     else: 
         min_row_length = 40
         year_stat_category_id = season_ids[2]
@@ -139,7 +139,6 @@ def get_gbg_stats(school=None, player=None, season=None, variant='batting'):
                 'HB', 'IBB', 'Inh Run', 'Inh Run Score', 'SHA', 'SFA', \
                 'Pitches', 'GO', 'FO', 'W', 'L', 'SV', 'OrdAppeared', 'KL', \
                 'pickoffs', 'stats_player_seq']
-        
         if season <= 2019: 
             headers.remove('pickoffs')
             if season <= 2015: 
@@ -153,10 +152,9 @@ def get_gbg_stats(school=None, player=None, season=None, variant='batting'):
         r = requests.get(url, params=payload, headers=_HEADERS)
         soup = BeautifulSoup(r.text, features='lxml')
         table = soup.find_all('table')[3]
-
-        rows = []
         # this is heinous lol
         # TODO: make this more readable
+        rows = []
         for val in table.find_all('tr')[3:]: 
             data = []
             for i in val.children:
@@ -239,7 +237,6 @@ def get_gbg_stats(school=None, player=None, season=None, variant='batting'):
                                     opponent_id = href.split('/')[-2]
                             except:
                                 continue
-
                             if not 'target' in i.find_all('a')[-1].attrs:
                                 opponent = i.find_all('a')[-1].contents[0]
                                 opponent = opponent.string.replace('</br>', '')
@@ -251,27 +248,22 @@ def get_gbg_stats(school=None, player=None, season=None, variant='batting'):
                                     field = 'neutral'
                                 else: 
                                     field = 'home'
-
                                 data.append(field)
                                 data.append(season_id)
                                 data.append(opponent_id)
                                 data.append(opponent)
-
                     else:
                         date = i.string
                         if date == 'Opponent Totals':
                             continue
                         else:
                             data.append(date)
-
-
             if len(data) >= min_row_length:
                 if stats_player_seq == '-100':
                     data.append('-')
                 else:
                     data.append(int(player_id))
                 rows.append(data)    
-
         res = pd.DataFrame(rows, columns=headers)
         if not player: 
             res.drop(columns=['stats_player_seq'], inplace=True)
@@ -347,7 +339,6 @@ def get_roster(school, season):
     elif len(str(season)) == 5: 
         season_id = season
         season = lookup_season_ids_reverse(season_id)[0]
-    
     try: 
         # doesn't take regular params, have to build url manually
         request_body = 'https://stats.ncaa.org/team/'
@@ -711,8 +702,6 @@ def _transform_career_stats(df):
         df['pickoffs'] = df['pickoffs'].astype('int64')
     return df
 
-
-    
 def get_team_stats(school, season, variant):
     """
     Obtains single-season batting/pithing stats totals for all players
@@ -1156,10 +1145,10 @@ def lookup_player_reverse(player_id, season):
         >>> 2486499
     
     """
-    df = _PLAYER_ID_LU_DF
-    player_row = df.loc[df.stats_player_seq == player_id]        
+    df = _ROSTERS_DF
+    player_row = df.loc[(df.stats_player_seq == player_id) & (df.season == season)]        
     if len(player_row) == 0:
         return f'''could not find player {player_name}'''
     else: 
-        return player_row['name'].values[0], player_row['school'].values[0]
+        return player_row['name'].values[0], player_row['school'].values[0], player_row['school_id'].values[0]
         
