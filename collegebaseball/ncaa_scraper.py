@@ -395,9 +395,13 @@ def get_roster(school, season):
         df = df.loc[df.stats_player_seq != 'None']
         df.stats_player_seq = df.stats_player_seq.astype('int64')
         df['season'] = season
+        df['season'] = df['season'].astype('int64')
         df['season_id'] = season_id 
+        df['season_id'] = df['season_id'].astype('int64')
         df['school'] = school
         df['school_id'] = school_id
+        df['school_id'] = df['school_id'].astype('int64')
+        df.name = df.name.apply(_format_names)
         return df
     except:
         print(f'''could not retrieve {season} roster for {school}''')
@@ -421,8 +425,6 @@ def get_multiyear_roster(school, start, end):
     for season in range(start, end+1):
         try: 
             new = get_roster(school, season) 
-            # new.loc[:, 'season'] = season
-            # new.loc[:, 'school'] = school
             if 'height' in new.columns: 
                 new.drop(columns=['height'], inplace=True)
             roster = pd.concat([roster, new])
@@ -1061,7 +1063,7 @@ def lookup_seasons_played(stats_player_seq):
     
     Args: 
         stats_player_seq (int): NCAA player_id
-   
+
     Returns: 
         tuple of ints: (debut season, most recent season)
     
@@ -1069,7 +1071,7 @@ def lookup_seasons_played(stats_player_seq):
     df = _PLAYERS_HISTORY_LU_DF
     row = df.loc[df.stats_player_seq == stats_player_seq]
     return row['debut_season'].values[0], row['season_last'].values[0]
-         
+    
 def lookup_school_id(school):
     """
     A function to find a school's id from it's name.
@@ -1138,7 +1140,7 @@ def lookup_player_id(player_name, school):
     else: 
         return player_row['stats_player_seq'].values[0]
         
-def lookup_player_reverse(player_id):
+def lookup_player_reverse(player_id, season):
     """
     A function to find a player's name and school from their player_id. 
     
