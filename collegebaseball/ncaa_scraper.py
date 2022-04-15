@@ -323,29 +323,30 @@ def get_roster(school, season):
 
     Returns: 
         DataFrame containing the following columns:
-         -   jersey
-         -   stats_player_seq
-         -   name
-         -   position
-         -   class_year
-         -   games_played
-         -   games_started
-         -   height (if 2019)
+        -   jersey
+        -   stats_player_seq
+        -   name
+        -   position
+        -   class_year
+        -   games_played
+        -   games_started
+        -   height (if 2019)
         
     data from stats.ncaa.org
     """
     # handling the school/school_id input types
     if type(school) is int: 
         school_id = school 
+        school = lookup_school_reverse(school_id)
     elif type(school) is str: 
         school_id = lookup_school_id(school)
-      
     # handling season/season_id input types
     if len(str(season)) == 4: 
         season_id = lookup_season_id(season)
     # get season_id from lookup table
     elif len(str(season)) == 5: 
         season_id = season
+        season = lookup_season_ids_reverse(season_id)[0]
     
     try: 
         # doesn't take regular params, have to build url manually
@@ -359,12 +360,12 @@ def get_roster(school, season):
         if (season in [2019, 14781, 2022, 15860]): 
             num_values = 7
             col_names = ['jersey','stats_player_seq', 'name', 'position', \
-                         'height', 'class_year', 'games_played',\
-                         'games_started']
+                        'height', 'class_year', 'games_played',\
+                        'games_started']
         else:
             num_values = 6
             col_names = ['jersey', 'stats_player_seq', 'name', 'position', \
-                         'class_year', 'games_played', 'games_started']
+                        'class_year', 'games_played', 'games_started']
             
         for index, value in enumerate(soup.find_all('td')):
             # each player has 6 associated values in table
@@ -393,6 +394,10 @@ def get_roster(school, season):
         df.stats_player_seq = df.stats_player_seq.str.replace('=', '')
         df = df.loc[df.stats_player_seq != 'None']
         df.stats_player_seq = df.stats_player_seq.astype('int64')
+        df['season'] = season
+        df['season_id'] = season_id 
+        df['school'] = school
+        df['school_id'] = school_id
         return df
     except:
         print(f'''could not retrieve {season} roster for {school}''')
@@ -416,8 +421,8 @@ def get_multiyear_roster(school, start, end):
     for season in range(start, end+1):
         try: 
             new = get_roster(school, season) 
-            new.loc[:, 'season'] = season
-            new.loc[:, 'school'] = school
+            # new.loc[:, 'season'] = season
+            # new.loc[:, 'school'] = school
             if 'height' in new.columns: 
                 new.drop(columns=['height'], inplace=True)
             roster = pd.concat([roster, new])
