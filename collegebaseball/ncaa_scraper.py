@@ -78,7 +78,11 @@ def get_gbg_stats(school=None, player=None, season=None, variant='batting'):
     if player:
         if type(player) == int:
             player_id = player
-            player_name, school_name, school_id = lookup_player_reverse(player_id, season)
+            try: 
+                player_name, school_name, school_id = lookup_player_reverse(player_id, season)
+            except: 
+                print('no records found')
+                return pd.DataFrame()
         elif type(player) == str: 
             player_name = player
             if school:
