@@ -1018,7 +1018,7 @@ def lookup_season_ids(season):
     season_id = season_row.values[0][1]
     batting_id = season_row.values[0][2]
     pitching_id = season_row.values[0][3]  
-    return (season_id, batting_id, pitching_id)
+    return int(season_id), int(batting_id), int(pitching_id)
 
 def lookup_season_ids_reverse(season_id):
     """
@@ -1034,7 +1034,7 @@ def lookup_season_ids_reverse(season_id):
     season = season_row['season'].values[0]
     batting_id = season_row['batting_id'].values[0]
     pitching_id = season_row['pitching_id'].values[0]
-    return (season, batting_id, pitching_id)
+    return int(season), int(batting_id), int(pitching_id)
 
 def lookup_season_id(season):
     """
@@ -1048,7 +1048,7 @@ def lookup_season_id(season):
     """
     season_row = _SEASON_LU_DF.loc[_SEASON_LU_DF['season'] == season]
     season_id = season_row.values[0][1]
-    return season_id
+    return int(season_id)
 
 def lookup_seasons_played(stats_player_seq): 
     """
@@ -1063,7 +1063,7 @@ def lookup_seasons_played(stats_player_seq):
     """
     df = _PLAYERS_HISTORY_LU_DF
     row = df.loc[df.stats_player_seq == stats_player_seq]
-    return row['debut_season'].values[0], row['season_last'].values[0]
+    return int(row['debut_season'].values[0]), int(row['season_last'].values[0])
     
 def lookup_school_id(school):
     """
@@ -1106,7 +1106,7 @@ def lookup_school_reverse(school_id):
     if len(school_row) == 0: 
         return f'''could not find school {school}'''
     else: 
-        return school_row['ncaa_name'].values[0]
+        return str(school_row['ncaa_name'].values[0])
         
 def lookup_player_id(player_name, school):
     """
@@ -1131,7 +1131,7 @@ def lookup_player_id(player_name, school):
     if len(player_row) == 0:
         return f'''could not find player {player_name}'''
     else: 
-        return player_row['stats_player_seq'].values[0]
+        return int(player_row['stats_player_seq'].values[0])
         
 def lookup_player_reverse(player_id, season):
     """
@@ -1154,5 +1154,5 @@ def lookup_player_reverse(player_id, season):
     if len(player_row) == 0:
         return f'''could not find player {player_name}'''
     else: 
-        return player_row['name'].values[0], player_row['school'].values[0], player_row['school_id'].values[0]
+        return str(player_row['name'].values[0]), str(player_row['school'].values[0]), int(player_row['school_id'].values[0])
         
