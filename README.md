@@ -8,7 +8,7 @@
 
 <!-- badges: end -->
 
-A `collegebaseball` is Python package for college baseball data acquisition and analysis.
+`collegebaseball` is Python package for college baseball data acquisition and analysis.
  
 ## **Installation** 
 `collegebaseball` is available to download from github
@@ -1500,7 +1500,7 @@ ncaa.lookup_season_id(2019)
 ```
 
 
-You can also find the debut and most recent seasons in which a given playeer has made and appearance in.   
+You can also find the debut and most recent seasons in which a given player has made and appearance in.   
 Just pass a player_id into **lookup_seasons_played**. 
 
 
