@@ -11,5 +11,5 @@ from .datasets import get_player_id_lu_table, get_linear_weights_table, \
     get_players_history_table, get_school_table, get_season_lu_table, \
     get_rosters_table
 
-__version__ = '1.1.0-alpha'
+__version__ = '1.1.1-alpha'
 __author__ = 'Nathan Blumenfeld'
