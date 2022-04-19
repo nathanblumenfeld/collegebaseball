@@ -10,5 +10,5 @@ from .win_pct import calculate_actual_win_pct, calculate_pythagenpat_win_pct
 from .datasets import get_player_id_lu_table, get_linear_weights_table, \
     get_players_history_table, get_school_table, get_season_lu_table
 
-__version__ = '1.1.0-alpha'
+__version__ = '1.1.2-alpha'
 __author__ = 'Nathan Blumenfeld'

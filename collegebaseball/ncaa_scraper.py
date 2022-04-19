@@ -28,7 +28,7 @@ _PLAYER_ID_LU_DF = pd.read_parquet(_PLAYER_ID_LU_PATH)
 
 #GET request options
 _HEADERS = {'User-Agent':'Mozilla/5.0'}
-_TIMEOUT = 0.1
+_TIMEOUT = 4
 
 def get_gbg_stats(school=None, player=None, season=None, variant='batting'): 
     """
@@ -423,6 +423,7 @@ def get_multiyear_roster(school, start, end):
     """
     roster = pd.DataFrame()
     for season in range(start, end+1):
+        time.sleep(random.uniform(0, _TIMEOUT))
         try: 
             new = get_roster(school, season) 
             if 'height' in new.columns: 
@@ -431,8 +432,10 @@ def get_multiyear_roster(school, start, end):
             try: 
                 roster.drop(columns=['Unnamed: 0'], inplace=True)
             except: 
+                time.sleep(random.uniform(0, _TIMEOUT))
                 continue
         except: 
+            time.sleep(random.uniform(0, _TIMEOUT))
             continue
         time.sleep(random.uniform(0, _TIMEOUT))
     return roster

@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
     name="collegebaseball",
-    version="1.1.0-alpha",
+    version="1.1.2-alpha",
     url="https://github.com/nathanblumenfeld/collegebaseball",
     author="Nathan Blumenfeld",
     author_email="nathanblumenfeld@gmail.com",
