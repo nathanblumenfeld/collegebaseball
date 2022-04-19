@@ -24,6 +24,14 @@ def get_season_lu_table():
         data_file_path = f
     return data_file_path
 
+def get_rosters_table():
+    """
+
+    """
+    with resources.path("collegebaseball.data", "rosters_2013_2022_all.parquet") as f:
+        data_file_path = f
+    return data_file_path
+
 
 def get_players_history_table():
     """
