@@ -37,7 +37,7 @@ def get_players_history_table():
     """
 
     """
-    with resources.path("collegebaseball.data", "players_history.parquet") as f:
+    with resources.path("collegebaseball.data", "player_history.parquet") as f:
         data_file_path = f
     return data_file_path
 
