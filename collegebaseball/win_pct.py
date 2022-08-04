@@ -8,6 +8,7 @@ Created by Nathan Blumenfeld in Winter 2022
 """
 import pandas as pd
 
+
 # GLOBAL VARIABLES
 _ROUND_TO = 3
 
