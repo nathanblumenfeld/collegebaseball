@@ -620,14 +620,11 @@ def ncaa_team_season_roster(school, season):
 def ncaa_team_roster(school, seasons: list[int]) -> pd.DataFrame:
     """
     Args:
-        school/school_id (str/int): name of school or school_id
-        end: a season/season_id (int/int), valid for 2013 - 2021
-        end must be <= start
-        start: a season/season_id (int/int), valid for 2013 - 2021
-        start must be >= end
+        school/school_id (str or int): name of school or school_id
+        seasons (list of ints): inclusive range 
     Returns:
-        concatenated DataFrame using get_roster across [start, end]
-    data from stats.ncaa.org. valid 2013 - 2022
+        concatenated DataFrame of team roster for each season
+    data from stats.ncaa.org. valid 2012 - 2022
     """
     if len(seasons) == 1:
         return ncaa_team_season_roster(school, seasons[0])
