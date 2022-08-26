@@ -38,7 +38,7 @@ def download_season_rosters(season):
     """
     res = pd.DataFrame()
     failures = []
-    for i in tqdm(_SCHOOL_ID_LU_DF.ncaa_name.unique()):
+    for i in tqdm(_SCHOOL_ID_LU_DF.school_id.unique()):
         sleep(random.uniform(0, _TIMEOUT))
         try:
             new = ncaa.ncaa_team_season_roster(i, season)

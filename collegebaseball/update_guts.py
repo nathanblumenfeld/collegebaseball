@@ -55,3 +55,13 @@ def update_rosters(season):
     print(failures)
     res = pd.concat([new, old])
     res.to_parquet(_ROSTERS_LU_PATH, index=False)
+
+
+# def update_available_stat_ids(new_season_available_stat_ids):
+#     """"
+
+#     Args:
+#         new_season_available_stat_ids (_type_): _description_
+#     """
+#     available_stat_id
+#     pass
