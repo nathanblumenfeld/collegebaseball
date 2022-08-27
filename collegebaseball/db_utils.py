@@ -30,28 +30,62 @@ _ROSTERS_DF = pd.read_parquet(_ROSTERS_LU_PATH)
 _HEADERS = {'User-Agent': 'Mozilla/5.0'}
 _TIMEOUT = 1
 
-# for all teams
+
+def download_rosters(seasons: list[int], divisions: list[int], save=True):
+    res = pd.DataFrame()
+    failures = []
+    for season in seasons:
+        for division in divisions:
+            sleep(random.uniform(0, _TIMEOUT))
+            try:
+                new = download_season_rosters(int(season), int(division))
+                print('new')
+                print(new)
+            except:
+                print('fail, new')
+                continue
+            try:
+                res = pd.concat([res, new])
+                print('concatted')
+                print(res)
+            except:
+                print('fail, concat')
+                continue
+    print('final')
+    print(res)
+    if save:
+        res.to_parquet(
+            'collegebaseball/data/'+str(divisions)+'_'+str(seasons)
+            + '_rosters.parquet', index=False)
+    return res, failures
 
 
-def download_season_rosters(season):
+def download_season_rosters(season: int, division: int, save=True):
     """
     """
     res = pd.DataFrame()
     failures = []
-    for i in tqdm(_SCHOOL_ID_LU_DF.school_id.unique()):
+    school_ids = _SCHOOL_ID_LU_DF.loc[_SCHOOL_ID_LU_DF['division'] == division]
+    school_ids = school_ids.school_id.unique()
+    for i in school_ids:
         sleep(random.uniform(0, _TIMEOUT))
         try:
-            new = ncaa.ncaa_team_season_roster(i, season)
+            new = ncaa.ncaa_team_season_roster(int(i), int(season))
             res = pd.concat([res, new])
         except:
             failures.append(i)
             continue
     res['season'] = season
     res['season'] = res['season'].astype('int64')
-    return res, failures
+    res['division'] = division
+    res['division'] = res['division'].astype('int64')
+    if save:
+        res.to_parquet('collegebaseball/data/d'+str(division) +
+                       '_'+str(season)+'_rosters.parquet', index=False)
+    return res
 
 
-def download_team_results(season):
+def download_team_results(season: int):
     """
     """
     res = pd.DataFrame()
@@ -59,7 +93,7 @@ def download_team_results(season):
     for i in tqdm(_SCHOOL_ID_LU_DF.ncaa_name.unique()):
         sleep(random.uniform(0, _TIMEOUT))
         try:
-            new = ncaa.ncaa_team_results(i, season)
+            new = ncaa.ncaa_team_results(int(i), int(season))
             res = pd.concat([res, new])
         except:
             failures.append(i)
@@ -67,7 +101,7 @@ def download_team_results(season):
     return res, failures
 
 
-def download_team_stats(season, variant):
+def download_team_stats(season: int, variant: str):
     """
     """
     res = pd.DataFrame()
@@ -75,7 +109,7 @@ def download_team_stats(season, variant):
     for i in tqdm(_SCHOOL_ID_LU_DF.ncaa_name.unique()):
         sleep(random.uniform(0, _TIMEOUT))
         try:
-            new = ncaa.ncaa_team_stats(i, season, variant)
+            new = ncaa.ncaa_team_stats(int(i), int(season), variant)
             new.loc[:, 'school'] = i
             new.loc[:, 'school'] = new.loc[:, 'school'].astype('string')
             res = pd.concat([res, new])

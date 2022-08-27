@@ -9,7 +9,7 @@ Created by Nathan Blumenfeld in Spring 2022
 import re
 import requests
 import pandas as pd
-import time
+from time import sleep
 import random
 from bs4 import BeautifulSoup, Tag
 import numpy as np
@@ -27,7 +27,7 @@ _ROSTERS_LU_PATH = datasets.get_rosters_table()
 # pre-load lookup tables for performance
 _SCHOOL_ID_LU_DF = pd.read_parquet(_SCHOOL_ID_LU_PATH)
 _SEASON_LU_DF = pd.read_parquet(_SEASON_ID_LU_PATH)
-_PLAYERS_HISTORY_LU_DF = pd.read_parquet(_PLAYERS_HISTORY_LU_PATH)
+_PLAYERS_HISTORY_LU_DF = pd.read_csv(_PLAYERS_HISTORY_LU_PATH)
 _PLAYER_ID_LU_DF = pd.read_parquet(_PLAYER_ID_LU_PATH)
 _ROSTERS_DF = pd.read_parquet(_ROSTERS_LU_PATH)
 
@@ -78,9 +78,9 @@ def ncaa_team_stats(school, season, variant, include_advanced=True,
 
     data from stats.ncaa.org. valid 2012 - 2022
     """
-    season, season_id, batting_id, pitching_id, fielding_id = _lookup_season_info(
+    season, season_id, batting_id, pitching_id, fielding_id = lookup_season_info(
         season)
-    school, school_id = _lookup_team_info(school)
+    school, school_id = lookup_team_info(school)
     if variant == 'batting':
         year_stat_category_id = batting_id
     elif variant == 'pitching':
@@ -94,7 +94,7 @@ def ncaa_team_stats(school, season, variant, include_advanced=True,
                'year_stat_category_id': str(year_stat_category_id)
                }
     if split is not None:
-        available_stat_id = available_stat_ids[season][split]
+        available_stat_id = available_stat_ids[variant][season][split]
         payload['available_stat_id'] = available_stat_id
     with Session() as s:
         r = s.get(url, params=payload, headers=_HEADERS)
@@ -134,7 +134,8 @@ def ncaa_team_stats(school, season, variant, include_advanced=True,
             res = metrics.add_batting_metrics(res)
             res = res.loc[res.PA > 0]
     elif variant == 'pitching':
-        res = res.loc[res.App > 0]
+        if 'App' in res.columns:
+            res = res.loc[res.App > 0]
         if include_advanced:
             res = metrics.add_pitching_metrics(res)
     return res
@@ -179,8 +180,8 @@ def ncaa_team_totals(school, season, variant, include_advanced=True,
         CI, PB, SBA, CSB, IDP, TP
     data from stats.ncaa.org. valid 2012 - 2022
     """
-    school, school_id = _lookup_team_info(school)
-    season, season_id, batting_id, pitching_id, fielding_id = _lookup_season_info(
+    school, school_id = lookup_team_info(school)
+    season, season_id, batting_id, pitching_id, fielding_id = lookup_season_info(
         season)
     if variant == 'batting':
         year_stat_category_id = batting_id
@@ -194,7 +195,7 @@ def ncaa_team_totals(school, season, variant, include_advanced=True,
                'year_stat_category_id': str(year_stat_category_id)
                }
     if split is not None:
-        available_stat_id = available_stat_ids[season][split]
+        available_stat_id = available_stat_ids[variant][season][split]
         payload['available_stat_id'] = available_stat_id
     with Session() as s:
         r = s.get(url, params=payload, headers=_HEADERS)
@@ -278,10 +279,10 @@ def ncaa_player_game_logs(player, season, variant, school=None):
 
     data from stats.ncaa.org. valid 2012 - 2022
     """
-    season, season_id, batting_id, pitching_id, fielding_id = _lookup_season_info(
+    season, season_id, batting_id, pitching_id, fielding_id = lookup_season_info(
         season)
     if school is not None:
-        school, school_id = _lookup_team_info(school)
+        school, school_id = lookup_team_info(school)
     if type(player) == int:
         player_id = player
         try:
@@ -431,9 +432,9 @@ def ncaa_team_game_logs(school, season, variant: str):
 
     data from stats.ncaa.org. valid 2012 - 2022
     """
-    season, season_id, batting_id, pitching_id, fielding_id = _lookup_season_info(
+    season, season_id, batting_id, pitching_id, fielding_id = lookup_season_info(
         season)
-    school, school_id = _lookup_team_info(school)
+    school, school_id = lookup_team_info(school)
     headers = _lookup_log_headers(season, variant)
     if variant == 'batting':
         year_stat_category_id = batting_id
@@ -574,14 +575,12 @@ def ncaa_team_season_roster(school, season):
 
     data from stats.ncaa.org, valid for 2012 - 2022.
     """
-    school, school_id = _lookup_team_info(school)
-    season, season_id, batting_id, pitching_id, fielding_id = _lookup_season_info(
+    ncaa_name, school_id = lookup_team_info(school)
+    season, season_id, batting_id, pitching_id, fielding_id = lookup_season_info(
         season)
-
     # doesn't take regular params, have to build url manually
     request_body = 'https://stats.ncaa.org/team/'
     request_body += f'''{str(school_id)}/roster/{str(season_id)}'''
-
     with Session() as s:
         r = s.get(request_body, headers=_HEADERS)
     soup = BeautifulSoup(r.text, features='lxml')
@@ -623,7 +622,7 @@ def ncaa_team_season_roster(school, season):
     df['season'] = df['season'].astype('int16')
     df['season_id'] = season_id
     df['season_id'] = df['season_id'].astype('int32')
-    df['school'] = school
+    df['school'] = ncaa_name
     df['school_id'] = school_id
     df['school_id'] = df['school_id'].astype('int32')
     df.name = df.name.apply(_format_names)
@@ -644,7 +643,7 @@ def ncaa_team_roster(school, seasons: list[int]) -> pd.DataFrame:
     else:
         roster = pd.DataFrame()
         for season in set(seasons):
-            time.sleep(random.uniform(0, _TIMEOUT))
+            sleep(random.uniform(0, _TIMEOUT))
             try:
                 new = ncaa_team_season_roster(school, season)
                 if 'height' in new.columns:
@@ -688,7 +687,7 @@ def ncaa_career_stats(stats_player_seq, variant):
     """
     # craft GET request to NCAA site
     season = lookup_seasons_played(stats_player_seq)[0]
-    season, season_id, batting_id, pitching_id, fielding_id = _lookup_season_info(
+    season, season_id, batting_id, pitching_id, fielding_id = lookup_season_info(
         season)
 
     if variant == 'batting':
@@ -797,8 +796,8 @@ def _transform_team_stats(df):
         df.rename(columns={'Player': 'name'}, inplace=True)
         cols = df.columns
     if 'name' in cols:
-        df['name'] = df['name'].apply(_format_names)
-        df['name'] = df['name'].astype('string')
+        df.loc[:, 'name'] = df.loc[:, 'name'].apply(_format_names)
+        df.loc[:, 'name'] = df.loc[:, 'name'].astype('string')
 
     # need to do this after name formatting, which relies on commas
     df = df.replace(',', '', regex=True)
@@ -838,13 +837,13 @@ def _transform_team_stats(df):
         df.stats_player_seq = df.stats_player_seq.str.replace(r'\D+', '')
         df.stats_player_seq = df.stats_player_seq.astype('int64')
     if 'date' in cols:
-        df['date'] = df['date'].astype('string')
-        df['season'] = df['date'].str[-4:]
-        df['season'] = df['season'].astype('int32')
+        df.loc[:, 'date'] = df.loc[:, 'date'].astype('string')
+        df.loc[:, 'season'] = df.loc[:, 'date'].str[-4:]
+        df.loc[:, 'season'] = df.loc[:, 'season'].astype('int32')
     if 'Year' in cols:
-        df['Year'] = df['Year'].astype('string')
-        df['season'] = df['Year'].str[:4]
-        df['season'] = df['season'].astype('int32')
+        df.loc[:, 'Year'] = df.loc[:, 'Year'].astype('string')
+        df.loc[:, 'season'] = df.loc[:, 'Year'].str[:4]
+        df.loc[:, 'season'] = df.loc[:, 'season'].astype('int32')
         df.drop(columns=['Year'], inplace=True)
     # TODO: add position list logic from database utils
     if 'Pos' in cols:
@@ -856,13 +855,13 @@ def _transform_team_stats(df):
         cols = df.columns
     if 'Pitches' in cols:
         df = df.rename(columns={'Pitches': 'pitches'})
-        df['pitches'] = df['pitches'].astype('string')
-        df['pitches'] = df['pitches'].astype('float')
-        df['pitches'] = df['pitches'].astype('int32')
+        df.loc[:, 'pitches'] = df.loc[:, 'pitches'].astype('string')
+        df.loc[:, 'pitches'] = df.loc[:, 'pitches'].astype('float')
+        df.loc[:, 'pitches'] = df.loc[:, 'pitches'].astype('int32')
     if 'ERA' in cols:
-        df['ERA'] = df['ERA'].round(4)
+        df.loc[:, 'ERA'] = df.loc[:, 'ERA'].round(4)
     if 'IP' in cols:
-        df['IP'] = df['IP'].round(4)
+        df.loc[:, 'IP'] = df.loc[:, 'IP'].round(4)
     return df
 
 
@@ -882,7 +881,7 @@ def lookup_season_ids(season):
     return int(season_id), int(batting_id), int(pitching_id), int(fielding_id)
 
 
-def lookup_season_ids_reverse(season_id):
+def lookup_season_reverse(season_id):
     """
     A function that finds the year_stat_category_ids and season of a season_id
     Args:
@@ -979,7 +978,6 @@ def lookup_player_id(player_name, school):
         _PLAYER_ID_LU_DF.name == player_name.title(
         )]
     player_row = player_row.loc[player_row.school == school]
-
     if len(player_row) == 0:
         return f'''could not find player {player_name}'''
     else:
@@ -1011,21 +1009,21 @@ def lookup_player_reverse(player_id, season):
         return str(player_row['name'].values[0]), str(player_row['school'].values[0]), int(player_row['school_id'].values[0])
 
 
-def _lookup_team_info(x):
+def lookup_team_info(x):
     """
     a function to handle the school/school_id input types
 
     """
     if type(x) is int:
         school_id = x
-        school = lookup_school_reverse(school_id)
+        ncaa_name = lookup_school_reverse(school_id)
     elif type(x) is str:
         school_id = lookup_school_id(x)
-        school = x
-    return school, school_id
+        ncaa_name = x
+    return str(ncaa_name), int(school_id)
 
 
-def _lookup_season_info(x):
+def lookup_season_info(x):
     """
     handling season/season_id input types
 
@@ -1033,10 +1031,9 @@ def _lookup_season_info(x):
     if len(str(x)) == 4:
         season = x
         season_id, batting_id, pitching_id, fielding_id = lookup_season_ids(x)
-
     elif len(str(x)) == 5:
         season_id = x
-        season, batting_id, pitching_id, fielding_id = lookup_season_ids_reverse(
+        season, batting_id, pitching_id, fielding_id = lookup_season_reverse(
             x)
     return season, season_id, batting_id, pitching_id, fielding_id
 
@@ -1365,170 +1362,307 @@ def _ncaa_team_ids(division):
     pass
 
 
+# try reading these automatically?
 available_stat_ids = {
-    2022: {
-        'two_outs': '17200',
-        'vs_RHP': '17201',
-        'leadoff_pct': '17202',  # ?
-        'rbi_3rd': '17203',  # ?
-        'pinch_hit': '17204',
-        'adv_ops': '17205',  # ?
-        'runners_on': '17206',
-        'hits_scorepos': '17207',  # ?
-        'vs_LHP': '17208',
-        'with_runrs2': '17212',  # ?
-        'with_scorepos2': '17213',  # ?
-        'bases_empty': '17214',  # ?
-        'bases_loaded': '17215'
+    'batting': {
+        2022: {
+            'two_outs': '17200',
+            'vs_RHP': '17201',
+            'leadoff_pct': '17202',  # ?
+            'rbi_3rd': '17203',  # ?
+            'pinch_hit': '17204',
+            'adv_ops': '17205',  # ?
+            'runners_on': '17206',
+            'hits_scorepos': '17207',  # ?
+            'vs_LHP': '17208',
+            'with_runrs2': '17212',  # ?
+            'with_scorepos2': '17213',  # ?
+            'bases_empty': '17214',  # ?
+            'bases_loaded': '17215'
+        },
+        2021: {
+            'two_outs': '17120',
+            'vs_RHP': '17121',
+            'leadoff_pct': '17122',  # ?
+            'rbi_3rd': '17123',  # ?
+            'pinch_hit': '17124',
+            'adv_ops': '17125',  # ?
+            'runners_on': '17126',
+            'hits_scorepos': '17127',  # ?
+            'vs_LHP': '17128',
+            'with_runrs2': '17132',  # ?
+            'with_scorepos2': '17133',  # ?
+            'bases_empty': '17134',  # ?
+            'bases_loaded': '17135'
+        },
+        2020: {
+            'two_outs': '17060',
+            'vs_RHP': '17061',
+            'leadoff_pct': '17062',  # ?
+            'rbi_3rd': '17063',  # ?
+            'pinch_hit': '17064',
+            'adv_ops': '17065',  # ?
+            'runners_on': '17066',
+            'hits_scorepos': '17067',  # ?
+            'vs_LHP': '17068',
+            'with_runrs2': '17072',  # ?
+            'with_scorepos2': '17073',  # ?
+            'bases_empty': '17074',  # ?
+            'bases_loaded': '17075'
+        },
+        2019: {
+            'two_outs': '16908',
+            'vs_RHP': '16909',
+            'leadoff_pct': '16910',  # ?
+            'rbi_3rd': '16911',  # ?
+            'pinch_hit': '16912',
+            'adv_ops': '16913',  # ?
+            'runners_on': '16914',
+            'hits_scorepos': '16915',  # ?
+            'vs_LHP': '16916',
+            'with_runrs2': '16920',  # ?
+            'with_scorepos2': '16921',  # ?
+            'bases_empty': '16922',  # ?
+            'bases_loaded': '16923'
+        },
+        2018: {
+            'two_outs': '11960',
+            'vs_RHP': '11961',
+            'leadoff_pct': '11962',  # ?
+            'rbi_3rd': '11963',  # ?
+            'pinch_hit': '11964',
+            'adv_ops': '11965',  # ?
+            'runners_on': '11966',
+            'hits_scorepos': '11967',  # ?
+            'vs_LHP': '11968',
+            'with_runrs2': '11972',  # ?
+            'with_scorepos2': '11973',  # ?
+            'bases_empty': '11974',  # ?
+            'bases_loaded': '11975'
+        },
+        2017: {
+            'two_outs': '10580',
+            'vs_RHP': '10581',
+            'leadoff_pct': '10582',  # ?
+            'rbi_3rd': '10583',  # ?
+            'pinch_hit': '10584',
+            'adv_ops': '10585',  # ?
+            'runners_on': '10586',
+            'hits_scorepos': '10587',  # ?
+            'vs_LHP': '10588',
+            'with_runrs2': '10592',  # ?
+            'with_scorepos2': '10593',  # ?
+            'bases_empty': '10594',  # ?
+            'bases_loaded': '10595'
+        },
+        2016: {
+            'two_outs': '10534',
+            'vs_RHP': '10535',
+            'leadoff_pct': '10536',  # ?
+            'rbi_3rd': '10537',  # ?
+            'pinch_hit': '10538',
+            'adv_ops': '10539',  # ?
+            'runners_on': '10540',
+            'hits_scorepos': '10541',  # ?
+            'vs_LHP': '10542',
+            'with_runrs2': '10546',  # ?
+            'with_scorepos2': '10547',  # ?
+            'bases_empty': '10548',  # ?
+            'bases_loaded': '10549'
+        },
+        2015: {
+            'two_outs': '10280',
+            'vs_RHP': '10281',
+            'leadoff_pct': '10282',  # ?
+            'rbi_3rd': '10283',  # ?
+            'pinch_hit': '10284',
+            'adv_ops': '10285',  # ?
+            'runners_on': '10286',
+            'hits_scorepos': '10287',  # ?
+            'vs_LHP': '10288',
+            'with_runrs2': '10292',  # ?
+            'with_scorepos2': '10293',  # ?
+            'bases_empty': '10294',  # ?
+            'bases_loaded': '10295'
+        },
+        2014: {
+            'two_outs': '10200',
+            'vs_RHP': '10201',
+            'leadoff_pct': '10202',  # ?
+            'rbi_3rd': '10203',  # ?
+            'pinch_hit': '10204',
+            'adv_ops': '10205',  # ?
+            'runners_on': '10206',
+            'hits_scorepos': '10207',  # ?
+            'vs_LHP': '10208',
+            'with_runrs2': '10212',  # ?
+            'with_scorepos2': '10213',  # ?
+            'bases_empty': '10214',  # ?
+            'bases_loaded': '10215'
+        },
+        2013: {
+            'two_outs': '10160',
+            'vs_RHP': '10161',
+            'leadoff_pct': '10162',  # ?
+            'rbi_3rd': '10163',  # ?
+            'pinch_hit': '10164',
+            'adv_ops': '10165',  # ?
+            'runners_on': '10166',
+            'hits_scorepos': '10167',  # ?
+            'vs_LHP': '10168',
+            'with_runrs2': '10172',  # ?
+            'with_scorepos2': '10173',  # ?
+            'bases_empty': '10174',  # ?
+            'bases_loaded': '10175'
+        },
+        2012: {
+            'two_outs': '10092',
+            'vs_RHP': '10093',
+            'leadoff_pct': '10094',  # ?
+            'rbi_3rd': '10095',  # ?
+            'pinch_hit': '10096',
+            'adv_ops': '10097',  # ?
+            'runners_on': '10098',
+            'hits_scorepos': '10099',  # ?
+            'vs_LHP': '10100',
+            'with_runrs2': '10104',  # ?
+            'with_scorepos2': '10105',  # ?
+            'bases_empty': '10106',  # ?
+            'bases_loaded': '10107'
+        }
     },
-    2021: {
-        'two_outs': '17120',
-        'vs_RHP': '17121',
-        'leadoff_pct': '17122',  # ?
-        'rbi_3rd': '17123',  # ?
-        'pinch_hit': '17124',
-        'adv_ops': '17125',  # ?
-        'runners_on': '17126',
-        'hits_scorepos': '17127',  # ?
-        'vs_LHP': '17128',
-        'with_runrs2': '17132',  # ?
-        'with_scorepos2': '17133',  # ?
-        'bases_empty': '17134',  # ?
-        'bases_loaded': '17135'
-    },
-    2020: {
-        'two_outs': '17060',
-        'vs_RHP': '17061',
-        'leadoff_pct': '17062',  # ?
-        'rbi_3rd': '17063',  # ?
-        'pinch_hit': '17064',
-        'adv_ops': '17065',  # ?
-        'runners_on': '17066',
-        'hits_scorepos': '17067',  # ?
-        'vs_LHP': '17068',
-        'with_runrs2': '17072',  # ?
-        'with_scorepos2': '17073',  # ?
-        'bases_empty': '17074',  # ?
-        'bases_loaded': '17075'
-    },
-    2019: {
-        'two_outs': '16908',
-        'vs_RHP': '16909',
-        'leadoff_pct': '16910',  # ?
-        'rbi_3rd': '16911',  # ?
-        'pinch_hit': '16912',
-        'adv_ops': '16913',  # ?
-        'runners_on': '16914',
-        'hits_scorepos': '16915',  # ?
-        'vs_LHP': '16916',
-        'with_runrs2': '16920',  # ?
-        'with_scorepos2': '16921',  # ?
-        'bases_empty': '16922',  # ?
-        'bases_loaded': '16923'
-    },
-    2018: {
-        'two_outs': '11960',
-        'vs_RHP': '11961',
-        'leadoff_pct': '11962',  # ?
-        'rbi_3rd': '11963',  # ?
-        'pinch_hit': '11964',
-        'adv_ops': '11965',  # ?
-        'runners_on': '11966',
-        'hits_scorepos': '11967',  # ?
-        'vs_LHP': '11968',
-        'with_runrs2': '11972',  # ?
-        'with_scorepos2': '11973',  # ?
-        'bases_empty': '11974',  # ?
-        'bases_loaded': '11975'
-    },
-    2017: {
-        'two_outs': '10580',
-        'vs_RHP': '10581',
-        'leadoff_pct': '10582',  # ?
-        'rbi_3rd': '10583',  # ?
-        'pinch_hit': '10584',
-        'adv_ops': '10585',  # ?
-        'runners_on': '10586',
-        'hits_scorepos': '10587',  # ?
-        'vs_LHP': '10588',
-        'with_runrs2': '10592',  # ?
-        'with_scorepos2': '10593',  # ?
-        'bases_empty': '10594',  # ?
-        'bases_loaded': '10595'
-    },
-    2016: {
-        'two_outs': '10534',
-        'vs_RHP': '10535',
-        'leadoff_pct': '10536',  # ?
-        'rbi_3rd': '10537',  # ?
-        'pinch_hit': '10538',
-        'adv_ops': '10539',  # ?
-        'runners_on': '10540',
-        'hits_scorepos': '10541',  # ?
-        'vs_LHP': '10542',
-        'with_runrs2': '10546',  # ?
-        'with_scorepos2': '10547',  # ?
-        'bases_empty': '10548',  # ?
-        'bases_loaded': '10549'
-    },
-    2015: {
-        'two_outs': '10280',
-        'vs_RHP': '10281',
-        'leadoff_pct': '10282',  # ?
-        'rbi_3rd': '10283',  # ?
-        'pinch_hit': '10284',
-        'adv_ops': '10285',  # ?
-        'runners_on': '10286',
-        'hits_scorepos': '10287',  # ?
-        'vs_LHP': '10288',
-        'with_runrs2': '10292',  # ?
-        'with_scorepos2': '10293',  # ?
-        'bases_empty': '10294',  # ?
-        'bases_loaded': '10295'
-    },
-    2014: {
-        'two_outs': '10200',
-        'vs_RHP': '10201',
-        'leadoff_pct': '10202',  # ?
-        'rbi_3rd': '10203',  # ?
-        'pinch_hit': '10204',
-        'adv_ops': '10205',  # ?
-        'runners_on': '10206',
-        'hits_scorepos': '10207',  # ?
-        'vs_LHP': '10208',
-        'with_runrs2': '10212',  # ?
-        'with_scorepos2': '10213',  # ?
-        'bases_empty': '10214',  # ?
-        'bases_loaded': '10215'
-    },
-    2013: {
-        'two_outs': '10160',
-        'vs_RHP': '10161',
-        'leadoff_pct': '10162',  # ?
-        'rbi_3rd': '10163',  # ?
-        'pinch_hit': '10164',
-        'adv_ops': '10165',  # ?
-        'runners_on': '10166',
-        'hits_scorepos': '10167',  # ?
-        'vs_LHP': '10168',
-        'with_runrs2': '10172',  # ?
-        'with_scorepos2': '10173',  # ?
-        'bases_empty': '10174',  # ?
-        'bases_loaded': '10175'
-    },
-    2012: {
-        'two_outs': '10092',
-        'vs_RHP': '10093',
-        'leadoff_pct': '10094',  # ?
-        'rbi_3rd': '10095',  # ?
-        'pinch_hit': '10096',
-        'adv_ops': '10097',  # ?
-        'runners_on': '10098',
-        'hits_scorepos': '10099',  # ?
-        'vs_LHP': '10100',
-        'with_runrs2': '10104',  # ?
-        'with_scorepos2': '10105',  # ?
-        'bases_empty': '10106',  # ?
-        'bases_loaded': '10107'
+    'pitching': {
+        2022: {
+            'leadoff_pct': '17216',
+            'runners': '17217',
+            'vs_LHB': '17218',
+            'two_outs': '17219',
+            'bases_empty': '17220',
+            'with_risp': '17221',
+            'with_risp2': '17222',  # ?
+            'with_runners2': '17223',  # ?
+            'bases_loaded': '17224',
+            'vs_RHB': '17225'
+        },
+        2021: {
+            'leadoff_pct': '17136',
+            'runners': '17137',
+            'vs_LHB': '17138',
+            'two_outs': '17139',
+            'bases_empty': '17140',
+            'with_risp': '17141',
+            'with_risp2': '17142',  # ?
+            'with_runners2': '17143',  # ?
+            'bases_loaded': '17144',
+            'vs_RHB': '17145'
+        },
+        2020: {
+            'leadoff_pct': '17076',
+            'runners': '17077',
+            'vs_LHB': '17078',
+            'two_outs': '17079',
+            'bases_empty': '17080',
+            'with_risp': '17081',
+            'with_risp2': '17082',  # ?
+            'with_runners2': '17083',  # ?
+            'bases_loaded': '17084',
+            'vs_RHB': '17085'
+        },
+        2019: {
+            'leadoff_pct': '16924',
+            'runners': '16925',
+            'vs_LHB': '16926',
+            'two_outs': '16927',
+            'bases_empty': '16928',
+            'with_risp': '16929',
+            'with_risp2': '16930',  # ?
+            'with_runners2': '16931',  # ?
+            'bases_loaded': '16932',
+            'vs_RHB': '16933'
+        },
+        2018: {
+            'leadoff_pct': '11976',
+            'runners': '11977',
+            'vs_LHB': '11978',
+            'two_outs': '11979',
+            'bases_empty': '11980',
+            'with_risp': '11981',
+            'with_risp2': '11982',  # ?
+            'with_runners2': '11983',  # ?
+            'bases_loaded': '11984',
+            'vs_RHB': '11985'
+        },
+        2017: {
+            'leadoff_pct': '10596',
+            'runners': '10597',
+            'vs_LHB': '10598',
+            'two_outs': '10599',
+            'bases_empty': '10600',
+            'with_risp': '10601',
+            'with_risp2': '10602',  # ?
+            'with_runners2': '10603',  # ?
+            'bases_loaded': '10604',
+            'vs_RHB': '10605'
+        },
+        2016: {
+            'leadoff_pct': '10550',
+            'runners': '10551',
+            'vs_LHB': '10552',
+            'two_outs': '10553',
+            'bases_empty': '10554',
+            'with_risp': '10555',
+            'with_risp2': '10556',  # ?
+            'with_runners2': '10557',  # ?
+            'bases_loaded': '10558',
+            'vs_RHB': '10559'
+        },
+        2015: {
+            'leadoff_pct': '10296',
+            'runners': '10297',
+            'vs_LHB': '10298',
+            'two_outs': '10299',
+            'bases_empty': '10300',
+            'with_risp': '10301',
+            'with_risp2': '10302',  # ?
+            'with_runners2': '10303',  # ?
+            'bases_loaded': '10304',
+            'vs_RHB': '10305'
+        },
+        2014: {
+            'leadoff_pct': '17216',
+            'runners': '17217',
+            'vs_LHB': '17218',
+            'two_outs': '17219',
+            'bases_empty': '17220',
+            'with_risp': '17221',
+            'with_risp2': '17222',  # ?
+            'with_runners2': '17223',  # ?
+            'bases_loaded': '17224',
+            'vs_RHB': '17225'
+        },
+        2013: {
+            'leadoff_pct': '10176',
+            'runners': '10177',
+            'vs_LHB': '10178',
+            'two_outs': '10179',
+            'bases_empty': '10180',
+            'with_risp': '10181',
+            'with_risp2': '10182',  # ?
+            'with_runners2': '10183',  # ?
+            'bases_loaded': '10184',
+            'vs_RHB': '10185'
+        },
+        2012: {
+            'leadoff_pct': '10108',
+            'runners': '10109',
+            'vs_LHB': '10110',
+            'two_outs': '10111',
+            'bases_empty': '10112',
+            'with_risp': '10113',
+            'with_risp2': '10114',  # ?
+            'with_runners2': '10115',  # ?
+            'bases_loaded': '10116',
+            'vs_RHB': '10117'
+        }
     }
 }

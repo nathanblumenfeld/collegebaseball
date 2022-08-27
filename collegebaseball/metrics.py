@@ -331,8 +331,8 @@ def add_pitching_metrics(df):
     Returns:
         DataFrame of stats with additional columns
     """
-    df.loc[:, 'IP-adj'] = df.apply(_adjust_innings_pitched, axis=1)
-    df.loc[:, '1B-A'] = df['H']-df['HR-A']-df['3B-A']-df['2B-A']
+    df['IP-adj'] = df.apply(_adjust_innings_pitched, axis=1)
+    df['1B-A'] = df['H']-df['HR-A']-df['3B-A']-df['2B-A']
     df.loc[:, 'OBP-against'] = round((df['H'] + df['BB'] + df['IBB']
                                      + df['HB']) /
                                      (df['BF']).replace(np.inf, 0), ROUND_TO)
