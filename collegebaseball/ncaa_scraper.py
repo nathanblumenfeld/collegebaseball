@@ -3,11 +3,8 @@ ncaa_scraper
 
 A module to scrape and parse college baseball statistics from stats.ncaa.org
 
-Created by Nathan Blumenfeld in Spring 2022
+Originally created by Nathan Blumenfeld in Spring 2022
 """
-# from tqdm import tqdm
-import re
-import requests
 import pandas as pd
 from time import sleep
 import random
@@ -17,20 +14,6 @@ from collegebaseball import datasets, metrics
 from requests import Session
 
 
-# lookup paths
-_SCHOOL_ID_LU_PATH = datasets.get_school_table()
-_SEASON_ID_LU_PATH = datasets.get_season_lu_table()
-_PLAYERS_HISTORY_LU_PATH = datasets.get_players_history_table()
-_PLAYER_ID_LU_PATH = datasets.get_player_id_lu_table()
-_ROSTERS_LU_PATH = datasets.get_rosters_table()
-
-# pre-load lookup tables for performance
-_SCHOOL_ID_LU_DF = pd.read_parquet(_SCHOOL_ID_LU_PATH)
-_SEASON_LU_DF = pd.read_parquet(_SEASON_ID_LU_PATH)
-_PLAYERS_HISTORY_LU_DF = pd.read_csv(_PLAYERS_HISTORY_LU_PATH)
-_PLAYER_ID_LU_DF = pd.read_parquet(_PLAYER_ID_LU_PATH)
-_ROSTERS_DF = pd.read_parquet(_ROSTERS_LU_PATH)
-
 # GET request options
 _HEADERS = {'User-Agent': 'Mozilla/5.0'}
 _TIMEOUT = 4
@@ -39,61 +22,38 @@ _TIMEOUT = 4
 def ncaa_team_stats(school, season, variant, include_advanced=True,
                     split=None):
     """
-    Obtains individual aggregate single-season batting/pitching stats totals
-    for all players on a given team
+    Obtains player-level aggregate single-season batting/pitching stats totals
+    for all players from a given school
 
     Args:
         school: schools (str) or NCAA school_id (int)
-        season: season (int, YYYY) or NCAA season_id (int), valid 2012-2022
+        season: season (int, YYYY) or NCAA season_id (int), valid 2013-2022
         variant (str): 'batting', 'pitching', or 'fielding'
         include_advanced (bool, optional). Whether to
-         automatically calcuate advanced metrics,
-        Defaults to True
-        split (str, optional): 'vs_LHP'
+         automatically calcuate advanced metrics, Defaults to True
+        split (str, optional): 'vs_LH', 'vs_RH', 'runners_on', 'bases_empty',
+        'bases_loaded', 'with_RISP', 'two_outs'
 
     Returns:
-        DataFrame with the following columns:
+       pd.DataFrame
 
-        batting
-        -------
-        Jersey, name, Yr, pos, GP, GS, R, AB, H, 2B, 3B,
-        TB, HR, RBI, BB, HBP, SF, SH, K, OPP DP, CS,
-        Picked, SB, IBB, season, stats_player_seq
-
-        if include_advanced, also:
-
-        pitching
-        --------
-        Jersey, name, Yr, pos, GP, App, ERA, IP, CG, H, R,
-        ER, BB, SO, SHO, BF, P-OAB, 2B-A, 3B-A, Bk, HR-A,
-        WP, HB, IBB, Inh Run, Inh Run Score, SHA, SFA, Pitches,
-        GO, FO, W, L, SV, KL, pickoffs, season, stats_player_seq
-
-        if include_advanced, also:
-
-        fielding
-        --------
-        Jersey, name, Yr, pos, GP, GS, G, PO, A, TC, E, FldPct,
-        CI, PB, SBA, CSB, IDP, TP
-
-    data from stats.ncaa.org. valid 2012 - 2022
+    data from stats.ncaa.org. valid 2013-2022
     """
     season, season_id, batting_id, pitching_id, fielding_id = lookup_season_info(
         season)
-    school, school_id = lookup_team_info(school)
+    school, school_id = lookup_school_info(school)
     if variant == 'batting':
         year_stat_category_id = batting_id
     elif variant == 'pitching':
         year_stat_category_id = pitching_id
     else:
         year_stat_category_id = fielding_id
-
     url = 'https://stats.ncaa.org/team/'+str(school_id)+'/stats'
     payload = {'game_sport_year_ctl_id': str(season_id),
                'id': str(season_id),
                'year_stat_category_id': str(year_stat_category_id)
                }
-    if split is not None:
+    if split is not None and variant != 'fielding':
         available_stat_id = available_stat_ids[variant][season][split]
         payload['available_stat_id'] = available_stat_id
     with Session() as s:
@@ -103,7 +63,12 @@ def ncaa_team_stats(school, season, variant, include_advanced=True,
         print('403 Error: NCAA blocked request')
         return pd.DataFrame()
     soup = BeautifulSoup(r.text, features='lxml')
+    if len(soup.find_all(name='table', id='stat_grid')) < 1:
+        return pd.DataFrame()
     table = soup.find_all(name='table', id='stat_grid')[-1]
+    if table is None:
+        print('no data found')
+        return pd.DataFrame()
     headers = [x for x in table.thead.tr.stripped_strings]
     headers.insert(headers.index('Player'), 'stats_player_seq')
     if season == 2022 and variant == 'batting':
@@ -126,18 +91,22 @@ def ncaa_team_stats(school, season, variant, include_advanced=True,
             row = row[:-1]
         rows.append(row)
     df = pd.DataFrame(rows, columns=headers)
+    if len(df) < 1:
+        return pd.DataFrame()
     df.columns = headers
     df['season'] = season
     res = _transform_team_stats(df)
     if variant == 'batting':
         if include_advanced:
-            res = metrics.add_batting_metrics(res)
-            res = res.loc[res.PA > 0]
+            if len(res) > 0:
+                res = metrics.add_batting_metrics(res)
+                res = res.loc[res.PA > 0]
     elif variant == 'pitching':
         if 'App' in res.columns:
             res = res.loc[res.App > 0]
         if include_advanced:
-            res = metrics.add_pitching_metrics(res)
+            if len(res) > 0:
+                res = metrics.add_pitching_metrics(res)
     return res
 
 
@@ -149,38 +118,19 @@ def ncaa_team_totals(school, season, variant, include_advanced=True,
 
     Args:
         school: schools (str) or NCAA school_id (int)
-        season: season (int, YYYY) or NCAA season_id (int), valid 2012 - 2022
+        season: season (int, YYYY) or NCAA season_id (int), valid 2013-2022
         variant (str): 'batting', 'pitching', or 'fielding'
-        include_advanced (bool, optional). Whether to automatically
-        split (str, optional): 'vs_LHP'
+        include_advanced (bool, optional). Whether to
+         automatically calcuate advanced metrics, Defaults to True
+        split (str, optional): 'vs_LH', 'vs_RH', 'runners_on', 'bases_empty',
+        'bases_loaded', 'with_RISP', 'two_outs'
 
     Returns:
-        DataFrame with the following columns:
-        batting
-        -------
-        Jersey, name, Yr, pos, GP, GS, R, AB, H, 2B, 3B,
-        TB, HR, RBI, BB, HBP, SF, SH, K, OPP DP, CS,
-        Picked, SB, IBB, season, stats_player_seq
+        pd.DataFrame
 
-        if include_advanced, also:
-
-
-        pitching
-        --------
-        Jersey, name, Yr, pos, GP, App, ERA, IP, CG, H, R,
-        ER, BB, SO, SHO, BF, P-OAB, 2B-A, 3B-A, Bk, HR-A,
-        WP, HB, IBB, Inh Run, Inh Run Score, SHA, SFA, Pitches,
-        GO, FO, W, L, SV, KL, pickoffs, season, stats_player_seq
-
-        if include_advanced, also:
-
-        fielding
-        --------
-        Jersey, name, Yr, pos, GP, GS, G, PO, A, TC, E, FldPct,
-        CI, PB, SBA, CSB, IDP, TP
-    data from stats.ncaa.org. valid 2012 - 2022
+    data from stats.ncaa.org. valid 2013-2022
     """
-    school, school_id = lookup_team_info(school)
+    school, school_id = lookup_school_info(school)
     season, season_id, batting_id, pitching_id, fielding_id = lookup_season_info(
         season)
     if variant == 'batting':
@@ -194,7 +144,7 @@ def ncaa_team_totals(school, season, variant, include_advanced=True,
                'id': str(season_id),
                'year_stat_category_id': str(year_stat_category_id)
                }
-    if split is not None:
+    if split is not None and variant != 'fielding':
         available_stat_id = available_stat_ids[variant][season][split]
         payload['available_stat_id'] = available_stat_id
     with Session() as s:
@@ -204,7 +154,13 @@ def ncaa_team_totals(school, season, variant, include_advanced=True,
         print('403 Error: NCAA blocked request')
         return pd.DataFrame()
     soup = BeautifulSoup(r.text, features='lxml')
+    if len(soup.find_all(name='table', id='stat_grid')) < 1:
+        print('no data found')
+        return pd.DataFrame()
     table = soup.find(name='table', id='stat_grid')
+    if table is None:
+        print('no data found')
+        return pd.DataFrame()
     headers = [x for x in table.thead.tr.stripped_strings]
     if season == 2022 and variant == 'batting':
         headers.remove('RBI2out')
@@ -225,64 +181,39 @@ def ncaa_team_totals(school, season, variant, include_advanced=True,
     cols_to_drop = ['Jersey', 'Yr', 'pos', 'GP', 'GS', 'App']
     for i in cols_to_drop:
         if i in res.columns:
-            res.drop(columns=[i], inplace=True)
+            res = res.drop(columns=[i], inplace=False)
     if variant == 'batting':
         if include_advanced:
-            res = metrics.add_batting_metrics(res)
-            res = res.loc[res.PA > 0]
+            if len(res) > 0:
+                res = metrics.add_batting_metrics(res)
+                res = res.loc[res.PA > 0]
     elif variant == 'pitching':
-        if 'App' in res.columns:
-            res = res.loc[res.App > 0]
         if include_advanced:
-            res = metrics.add_pitching_metrics(res)
+            if len(res) > 0:
+                res = metrics.add_pitching_metrics(res)
     return res
 
 
 def ncaa_player_game_logs(player, season, variant, school=None):
     """
-    A function to obtain game-by-game stats for a given player players
-    Transmits a GET request to stats.ncaa.org, parses game-by-game stats
+    Obtains aggregate player-level game-by-game stats
 
     Args:
         player: player name (str) or NCAA stats_player_seq (int)
         variant (str): 'batting', 'pitching', or 'fielding'
-        season: season as (int, YYYY) or NCAA season_id (int), valid 2012-2022
+        season: season as (int, YYYY) or NCAA season_id (int), valid 2013-2022
         school (optional, if not passing a stats_player_seq): school name (str)
             or NCAA school_id (int)
 
     Returns:
-        DataFrame with the following columns:
+        pd.DataFrame
 
-        batting
-        -------
-        game_id, date, field, opponent_name, opponent_id,
-        innings_played, extras, runs_scored, runs_allowed,
-        run_difference, result, school_id, season_id, batting, GP,
-        BA, G, OBPct, SlgPct, R, AB, H, 2B, 3B, TB, HR, RBI, BB, HBP,
-        SF, SH, K, OPP DP, CS, Picked, SB, IBB, RBI2out, season
-
-        pitching
-        --------
-        game_id, date, field, opponent_name, opponent_id,
-        innings_played, extras, runs_scored, runs_allowed,
-        run_difference, result, school_id, season_id, school_id,
-        GP, G, App, GS, ERA, IP, CG, H, R, ER, BB, SO, SHO, BF,
-        P-OAB, 2B-A, 3B-A, Bk, HR-A, WP, HB, IBB, Inh Run,
-        Inh Run Score, SHA, SFA, Pitches, GO, FO, W, L, SV,
-        OrdAppeared, KL, season
-
-        fielding
-        --------
-        Jersey, name, Yr, pos, GP, GS, G, PO, A, TC, E, FldPct,
-        CI, PB, SBA, CSB, IDP, TP
-
-
-    data from stats.ncaa.org. valid 2012 - 2022
+    data from stats.ncaa.org. valid 2013-2022
     """
     season, season_id, batting_id, pitching_id, fielding_id = lookup_season_info(
         season)
     if school is not None:
-        school, school_id = lookup_team_info(school)
+        school, school_id = lookup_school_info(school)
     if type(player) == int:
         player_id = player
         try:
@@ -323,6 +254,9 @@ def ncaa_player_game_logs(player, season, variant, school=None):
                 if i.a:
                     if 'box_score' in i.a.get('href'):
                         score = i.a.string.strip()
+                        score = score.replace('W', '')
+                        score = score.replace('L', '')
+                        score = score.replace('T', '')
                     opponent_info = i.find_all('a')[-1].get('href')
                     if '?' in opponent_info:
                         game_id = opponent_info.split('?')[0].split('/')[-1]
@@ -348,9 +282,6 @@ def ncaa_player_game_logs(player, season, variant, school=None):
                     data.append(i.get('data-order'))
                 else:
                     date = i.string
-        score = score.replace('W', '')
-        score = score.replace('L', '')
-        score = score.replace('T', '')
         if '(' in score:
             innings_played = score.split(
                 '(')[-1].split(')')[0].strip()
@@ -392,49 +323,23 @@ def ncaa_player_game_logs(player, season, variant, school=None):
     return res
 
 
-def ncaa_team_game_logs(school, season, variant: str):
+def ncaa_team_game_logs(school, season, variant):
     """
-    A function to obtain game-by-game stats for teams
-    Transmits a GET request to stats.ncaa.org, parses game-by-game stats
-    html changes year to year make it difficult to automatically read tables
-    and NCAA likes to mess with the columns in different years
-    so this in-elegant solution is what we have
+    Obtains aggregate team-level game-by-game stats
 
     Args:
         school: school name (str) or NCAA school_id (int)
-        seasons: seasons as (int, YYYY) or NCAA season_id (list)
+        seasons: seasons as (int, YYYY) or NCAA season_id (list), 2013-2022
         variant (str): 'batting', 'pitching', or 'fielding'
 
     Returns:
-        DataFrame with the following columns:
-        batting
-        -------
-        game_id, date, field, opponent_name, opponent_id,
-        innings_played, extras, runs_scored, runs_allowed,
-        run_difference, result, school_id, season_id, batting, GP,
-        BA, G, OBPct, SlgPct, R, AB, H, 2B, 3B, TB, HR, RBI, BB, HBP,
-        SF, SH, K, OPP DP, CS, Picked, SB, IBB, RBI2out, season
+        pd.DataFrame
 
-        pitching
-        --------
-        game_id, date, field, opponent_name, opponent_id,
-        innings_played, extras, runs_scored, runs_allowed,
-        run_difference, result, school_id, season_id, school_id,
-        GP, G, App, GS, ERA, IP, CG, H, R, ER, BB, SO, SHO, BF,
-        P-OAB, 2B-A, 3B-A, Bk, HR-A, WP, HB, IBB, Inh Run,
-        Inh Run Score, SHA, SFA, Pitches, GO, FO, W, L, SV,
-        OrdAppeared, KL, season
-
-        fielding
-        --------
-        Jersey, name, Yr, pos, GP, GS, G, PO, A, TC, E, FldPct,
-        CI, PB, SBA, CSB, IDP, TP
-
-    data from stats.ncaa.org. valid 2012 - 2022
+    data from stats.ncaa.org. valid 2013-2022
     """
     season, season_id, batting_id, pitching_id, fielding_id = lookup_season_info(
         season)
-    school, school_id = lookup_team_info(school)
+    school, school_id = lookup_school_info(school)
     headers = _lookup_log_headers(season, variant)
     if variant == 'batting':
         year_stat_category_id = batting_id
@@ -456,11 +361,15 @@ def ncaa_team_game_logs(school, season, variant: str):
     for val in table.find_all(_has_no_id)[3:]:
         row = []
         for i in val.children:
+            print(i)
             if isinstance(i, Tag):
                 if i.a:
                     if len(i.find_all('a')) == 1:
                         if 'box_score' in i.a.get('href'):
                             score = i.a.string.strip()
+                            score = score.replace('W', '')
+                            score = score.replace('L', '')
+                            score = score.replace('T', '')
                             game_id = i.a.get('href').split('/')[-2]
                         else:
                             opponent_id = '-'
@@ -489,9 +398,6 @@ def ncaa_team_game_logs(school, season, variant: str):
                     row.append(i.get('data-order'))
                 else:
                     date = i.string
-        score = score.replace('W', '')
-        score = score.replace('L', '')
-        score = score.replace('T', '')
         if '(' in score:
             innings_played = score.split(
                 '(')[-1].split(')')[0].strip()
@@ -536,18 +442,16 @@ def ncaa_team_game_logs(school, season, variant: str):
 
 def ncaa_team_results(school, season):
     """
-    A function to retreive information about completed games.
+    Obtains the results of completed games for a given school/season
+
     Retrieves data of completed games for a given team from stats.ncaa.org
     Args:
         school: school name (str) or NCAA school_id (int)
-        season: season (int, YYYY) or NCAA season_id (int),  valid 2012-2022
+        season: season (int, YYYY) or NCAA season_id (int), valid 2013-2022
     Returns:
-        DataFrame with the following columns:
+        pd.DataFrame
 
-        game_id, date, field, opponent_name, opponent_id,
-        innings_played, extras, runs_scored, runs_allowed,
-        run_difference, result, school_id, season_id, season
-    data from stats.ncaa.org. valid 2012 - 2022
+    data from stats.ncaa.org. valid 2013-2022
     """
     data = ncaa_team_game_logs(school=school, season=season, variant='batting')
     res = data[['game_id', 'date', 'field', 'opponent_name', 'opponent_id',
@@ -558,27 +462,20 @@ def ncaa_team_results(school, season):
 
 def ncaa_team_season_roster(school, season):
     """
-    Transmits GET request to stats.ncaa.org, parses roster information
+    Retrieves the single-season roster for a given school/season
+
     Args:
         school: school name (str) or NCAA school_id (int)
         season: season as (int, YYYY) or NCAA season_id (int), valid 2012-2022
-    Returns:
-        DataFrame containing the following columns:
-        -   jersey
-        -   stats_player_seq
-        -   name
-        -   position
-        -   class_year
-        -   games_played
-        -   games_started
-        -   height (in 2019 only)
 
-    data from stats.ncaa.org, valid for 2012 - 2022.
+    Returns:
+        pd.DataFrame
+
+    data from stats.ncaa.org, valid for 2013-2022.
     """
-    ncaa_name, school_id = lookup_team_info(school)
+    ncaa_name, school_id = lookup_school_info(school)
     season, season_id, batting_id, pitching_id, fielding_id = lookup_season_info(
         season)
-    # doesn't take regular params, have to build url manually
     request_body = 'https://stats.ncaa.org/team/'
     request_body += f'''{str(school_id)}/roster/{str(season_id)}'''
     with Session() as s:
@@ -599,12 +496,10 @@ def ncaa_team_season_roster(school, season):
             details = []
             res.append(details)
         if index % num_values == 1:
-            # need to get stats_player_seq from href tag
             try:
                 details.append((value.contents[0].get('href')[-7:]))
                 details.append(value.contents[0].string)
             except:
-                # no id found (occurs when players has 0 games played)
                 details.append(None)
                 details.append(value.contents[0])
         else:
@@ -619,24 +514,29 @@ def ncaa_team_season_roster(school, season):
     df = df.loc[df.stats_player_seq != 'None']
     df.stats_player_seq = df.stats_player_seq.astype('int64')
     df['season'] = season
-    df['season'] = df['season'].astype('int16')
     df['season_id'] = season_id
-    df['season_id'] = df['season_id'].astype('int32')
     df['school'] = ncaa_name
     df['school_id'] = school_id
     df['school_id'] = df['school_id'].astype('int32')
+    df['season'] = df['season'].astype('int16')
+    df['season_id'] = df['season_id'].astype('int32')
     df.name = df.name.apply(_format_names)
     return df
 
 
-def ncaa_team_roster(school, seasons: list[int]) -> pd.DataFrame:
+def ncaa_team_roster(school, seasons):
     """
+    Retrieves a blindly concattenated roster across multiple seasons
+
     Args:
         school/school_id (str or int): name of school or school_id
-        seasons (list of ints): inclusive range
+        seasons (list of ints): list of season as (int, YYYY)
+         or NCAA season_id (int), valid 2013-2022
+
     Returns:
-        concatenated DataFrame of team roster for each season
-    data from stats.ncaa.org. valid 2012 - 2022
+        pd.DataFrame
+
+    data from stats.ncaa.org. valid 2013-2022
     """
     if len(seasons) == 1:
         return ncaa_team_season_roster(school, seasons[0])
@@ -659,66 +559,39 @@ def ncaa_team_roster(school, seasons: list[int]) -> pd.DataFrame:
 def ncaa_career_stats(stats_player_seq, variant):
     """
     Transmits GET request to stats.ncaa.org, parses career stats
+
     Args:
         stats_player_seq (int): the NCAA player_id
         variant (str): 'batting', 'pitching', or 'fielding'
+
     Returns:
-        DataFrame with the following columns
+        pd.DataFrame
 
-        batting
-        -------
-        school_id, GP, BA, G, OBPct, SlgPct, R, AB, H, 2B, 3B, TB, HR,
-        RBI, BB, HBP, SF, SH, K, OPP DP, CS, Picked, SB, IBB, RBI2out,
-        season
-
-        pitching
-        --------
-        school_id, GP, G, App, GS, ERA, IP, CG, H, R, ER,
-        BB, SO, SHO, BF, P-OAB, 2B-A, 3B-A, Bk, HR-A, WP,
-        HB, IBB, Inh Run, Inh Run Score, SHA, SFA, Pitches, GO,
-        FO, W, L, SV, KL, season
-
-        fielding
-        --------
-        Jersey, name, Yr, pos, GP, GS, G, PO, A, TC, E, FldPct,
-        CI, PB, SBA, CSB, IDP, TP
-
-    data from stats.ncaa.org. valid 2013 - 2022
+    data from stats.ncaa.org. valid 2013-2022
     """
-    # craft GET request to NCAA site
     season = lookup_seasons_played(stats_player_seq)[0]
     season, season_id, batting_id, pitching_id, fielding_id = lookup_season_info(
         season)
-
     if variant == 'batting':
         year_stat_category_id = batting_id
     elif variant == 'pitching':
         year_stat_category_id = pitching_id
     else:
         year_stat_category_id = fielding_id
-
     payload = {'id': str(season_id), 'stats_player_seq': str(stats_player_seq),
                'year_stat_category_id': str(year_stat_category_id)}
     url = 'https://stats.ncaa.org/player/index'
-    # send request
     with Session() as s:
         r = s.get(url, params=payload, headers=_HEADERS)
-
     if r.status_code == 403:
         print('403 Error: NCAA blocked request')
         return pd.DataFrame()
-
     try:
-        # parse data
         soup = BeautifulSoup(r.text, features='lxml')
         table = soup.find_all('table')[2]
-
-        # get table headers
         headers = []
         for val in table.find_all('th'):
             headers.append(val.string.strip())
-
-        # get table data
         rows = []
         row = []
         for val in table.find_all('td'):
@@ -735,8 +608,6 @@ def ncaa_career_stats(stats_player_seq, variant):
             else:
                 if val.string.strip() != 'Career':
                     row.append(val.string.strip())
-
-        # Turn into DataFrame
         df = pd.DataFrame(rows)
         df.columns = headers
         df = _transform_team_stats(df)
@@ -746,7 +617,191 @@ def ncaa_career_stats(stats_player_seq, variant):
         return pd.DataFrame()
 
 
-def _format_names(original):
+def lookup_season_ids(season):
+    """
+    A function that finds the year_stat_category_ids of a given season
+    Args:
+        season (int, YYYY)
+    Returns:
+        tuple of (season_id, batting_id, pitching_id) for desired season
+    """
+    df = pd.read_parquet(datasets.get_season_lu_path())
+    season_row = df.loc[df['season'] == season]
+    season_id = season_row.values[0][1]
+    batting_id = season_row.values[0][2]
+    pitching_id = season_row.values[0][3]
+    fielding_id = season_row.values[0][4]
+    return int(season_id), int(batting_id), int(pitching_id), int(fielding_id)
+
+
+def lookup_season_reverse(season_id):
+    """
+    A function that finds the year_stat_category_ids and season of a season_id
+    Args:
+        season_id (int): NCAA season_id
+    Returns:
+        tuple of (season_id, batting_id, pitching_id) for desired season
+    """
+    df = pd.read_parquet(datasets.get_season_lu_path())
+    season_row = df.loc[df['season_id'] == season_id]
+    season = season_row['season'].values[0]
+    batting_id = season_row['batting_id'].values[0]
+    pitching_id = season_row['pitching_id'].values[0]
+    fielding_id = season_row['fielding_id'].values[0]
+    return int(season), int(batting_id), int(pitching_id), int(fielding_id)
+
+
+def lookup_season_id(season):
+    """
+    A function that finds the year_stat_category_ids for a given season
+
+    Args:
+        season (int, YYYY)
+
+    Returns:
+        season_id as an int
+    """
+    df = pd.read_parquet(datasets.get_season_lu_path())
+    season_row = df.loc[df['season'] == season]
+    season_id = season_row.values[0][1]
+    return int(season_id)
+
+
+def lookup_seasons_played(stats_player_seq):
+    """
+    A function to find the final and debut seasons of a given player
+    Args:
+        stats_player_seq (int): NCAA player_id
+    Returns:
+        tuple of ints: (debut season, most recent season)
+    """
+    df = pd.read_csv(datasets.get_players_history_path())
+    row = df.loc[df.stats_player_seq == stats_player_seq]
+    return int(row['debut_season'].values[0]), int(row['season_last'].values[0])
+
+
+def lookup_school_id(school):
+    """
+    A function to find a school's id from it's name
+    Args:
+        school (str): the name of the school
+    Returns:
+        school_id as int
+    Examples:
+        lookup_school_id("cornell")
+        >>> 167
+    """
+    df = pd.read_parquet(datasets.get_school_path())
+    school_row = df.loc[(df.ncaa_name == school)]
+    if len(school_row) == 0:
+        school_row = df.loc[(df.bd_name == school)]
+    if len(school_row) == 0:
+        return f'''could not find school {school}'''
+    else:
+        return int(school_row['school_id'].values[0])
+
+
+def lookup_school_reverse(school_id):
+    """
+    A function to find a school's name from a school_id
+    Args:
+        school_id as int
+    Returns:
+        school (str): the name of the school
+    Examples:
+        lookup_school_reverse(167)
+        >>> "Cornell"
+    """
+    df = pd.read_parquet(datasets.get_school_path())
+    school_row = df.loc[(
+        df.school_id == school_id)]
+    if len(school_row) == 0:
+        return f'''could not find school {school_id}'''
+    else:
+        return str(school_row['ncaa_name'].values[0])
+
+
+def lookup_player_id(player_name, school):
+    """
+    A function to find a player's id from their name and school
+
+    Args:
+        player_name (str): name of player to lookup
+        school: the name of the player's school (str) or school_id (int)
+
+    Returns:
+        The player_id of the player (int)
+
+    Examples:
+        lookup_player_id("Jake Gelof", "Virginia")
+        >>> 2486499
+    """
+    df = pd.read_parquet(datasets.get_player_id_lu_path())
+    player_row = df.loc[
+        df.name == player_name.title(
+        )]
+    player_row = player_row.loc[player_row.school == school]
+    if len(player_row) == 0:
+        return f'''could not find player {player_name}'''
+    else:
+        return int(player_row['stats_player_seq'].values[0])
+
+
+def lookup_player_reverse(player_id, season):
+    """
+    A function to find a player's name and school from their player_id
+
+    Args:
+        player_name (str): name of player to lookup
+        school: either the ncaa_name of the school (str) of the player
+
+    Returns:
+        The name and school of the player as a strings
+
+    Examples:
+        lookup_player_id("Jake Gelof", "Virginia")
+        >>> 2486499
+
+    """
+    df = pd.read_parquet(datasets.get_rosters_path())
+    row = df.loc[(df.stats_player_seq == player_id)
+                 & (df.season == season)]
+    if len(row) == 0:
+        return f'''could not find player {player_id}'''
+    else:
+        return str(row['name'].values[0]), str(row['school'].values[0]), int(row['school_id'].values[0])
+
+
+def lookup_school_info(x):
+    """
+    a function to handle the school/school_id input types
+
+    """
+    if type(x) is int:
+        school_id = x
+        ncaa_name = lookup_school_reverse(school_id)
+    elif type(x) is str:
+        school_id = lookup_school_id(x)
+        ncaa_name = x
+    return str(ncaa_name), int(school_id)
+
+
+def lookup_season_info(x):
+    """
+    handling season/season_id input types
+
+    """
+    if len(str(x)) == 4:
+        season = x
+        season_id, batting_id, pitching_id, fielding_id = lookup_season_ids(x)
+    elif len(str(x)) == 5:
+        season_id = x
+        season, batting_id, pitching_id, fielding_id = lookup_season_reverse(
+            x)
+    return season, season_id, batting_id, pitching_id, fielding_id
+
+
+def _format_names(original: str):
     """
     A helper function to turn names from "Last, First" to "First Last"
     Args:
@@ -791,18 +846,15 @@ def _transform_team_stats(df):
     """
     df = _eliminate_dashes(df)
     cols = df.columns
-
     if 'Player' in cols:
         df.rename(columns={'Player': 'name'}, inplace=True)
         cols = df.columns
     if 'name' in cols:
         df.loc[:, 'name'] = df.loc[:, 'name'].apply(_format_names)
         df.loc[:, 'name'] = df.loc[:, 'name'].astype('string')
-
     # need to do this after name formatting, which relies on commas
     df = df.replace(',', '', regex=True)
     df.fillna(value=0.00, inplace=True)
-
     # set dtypes
     data_types = {
         'int32': ['opponent_id', 'season_id', 'school_id', 'innings_played',
@@ -819,12 +871,10 @@ def _transform_team_stats(df):
         'float': ['ERA', 'IP'],
         'string': ['Yr', 'Pos', 'date', 'Year']
     }
-
     for i in data_types.keys():
         for j in data_types[i]:
             if j in cols:
                 df[j] = df[j].astype(i)
-
     # we're going to calculate OBP/BA/SLG ourselves
     # G and RBI2out are unreliable
     drops = ['OBPct', 'BA', 'SlgPct', 'RBI2out', 'G']
@@ -833,9 +883,10 @@ def _transform_team_stats(df):
             df.drop(columns=[i], inplace=True)
     # keeping as 64 byte to leave space for new potential player uuids
     if 'stats_player_seq' in cols:
-        df.stats_player_seq = df.stats_player_seq.astype('string')
-        df.stats_player_seq = df.stats_player_seq.str.replace(r'\D+', '')
-        df.stats_player_seq = df.stats_player_seq.astype('int64')
+        df.loc[:, 'stats_player_seq'] = df.stats_player_seq.astype('string')
+        df.loc[:, 'stats_player_seq'] = df.stats_player_seq.str.replace(
+            r'\D+', '')
+        df.loc[:, 'stats_player_seq'] = df.stats_player_seq.astype('int64')
     if 'date' in cols:
         df.loc[:, 'date'] = df.loc[:, 'date'].astype('string')
         df.loc[:, 'season'] = df.loc[:, 'date'].str[-4:]
@@ -845,16 +896,14 @@ def _transform_team_stats(df):
         df.loc[:, 'season'] = df.loc[:, 'Year'].str[:4]
         df.loc[:, 'season'] = df.loc[:, 'season'].astype('int32')
         df.drop(columns=['Year'], inplace=True)
-    # TODO: add position list logic from database utils
     if 'Pos' in cols:
-        df = df.rename(columns={'Pos': 'pos'})
+        df = df.rename(columns={'Pos': 'pos'}, inplace=False)
         cols = df.columns
-    # TODO: semantic choice: 'school' or 'team'?
     if 'Team' in cols:
-        df = df.rename(columns={'Team': 'school_id'})
+        df = df.rename(columns={'Team': 'school_id'}, inplace=False)
         cols = df.columns
     if 'Pitches' in cols:
-        df = df.rename(columns={'Pitches': 'pitches'})
+        df = df.rename(columns={'Pitches': 'pitches'}, inplace=False)
         df.loc[:, 'pitches'] = df.loc[:, 'pitches'].astype('string')
         df.loc[:, 'pitches'] = df.loc[:, 'pitches'].astype('float')
         df.loc[:, 'pitches'] = df.loc[:, 'pitches'].astype('int32')
@@ -865,177 +914,8 @@ def _transform_team_stats(df):
     return df
 
 
-def lookup_season_ids(season):
-    """
-    A function that finds the year_stat_category_ids of a given season
-    Args:
-        season (int, YYYY)
-    Returns:
-        tuple of (season_id, batting_id, pitching_id) for desired season
-    """
-    season_row = _SEASON_LU_DF.loc[_SEASON_LU_DF['season'] == season]
-    season_id = season_row.values[0][1]
-    batting_id = season_row.values[0][2]
-    pitching_id = season_row.values[0][3]
-    fielding_id = season_row.values[0][4]
-    return int(season_id), int(batting_id), int(pitching_id), int(fielding_id)
-
-
-def lookup_season_reverse(season_id):
-    """
-    A function that finds the year_stat_category_ids and season of a season_id
-    Args:
-        season_id (int): NCAA season_id
-    Returns:
-        tuple of (season_id, batting_id, pitching_id) for desired season
-    """
-    season_row = _SEASON_LU_DF.loc[_SEASON_LU_DF['season_id'] == season_id]
-    season = season_row['season'].values[0]
-    batting_id = season_row['batting_id'].values[0]
-    pitching_id = season_row['pitching_id'].values[0]
-    fielding_id = season_row['fielding_id'].values[0]
-    return int(season), int(batting_id), int(pitching_id), int(fielding_id)
-
-
-def lookup_season_id(season):
-    """
-    A function that finds the year_stat_category_id's for a given season
-    Args:
-        season (int, YYYY)
-    Returns:
-        season_id as an int
-    """
-    season_row = _SEASON_LU_DF.loc[_SEASON_LU_DF['season'] == season]
-    season_id = season_row.values[0][1]
-    return int(season_id)
-
-
-def lookup_seasons_played(stats_player_seq):
-    """
-    A function to find the final and debut seasons of a given player
-    Args:
-        stats_player_seq (int): NCAA player_id
-    Returns:
-        tuple of ints: (debut season, most recent season)
-    """
-    df = _PLAYERS_HISTORY_LU_DF
-    row = df.loc[df.stats_player_seq == stats_player_seq]
-    return int(row['debut_season'].values[0]), int(row['season_last'].values[0])
-
-
-def lookup_school_id(school):
-    """
-    A function to find a school's id from it's name
-    Args:
-        school (str): the name of the school
-    Returns:
-        school_id as int
-    Examples:
-        lookup_school_id("cornell")
-        >>> 167
-    """
-    school_row = _SCHOOL_ID_LU_DF.loc[(_SCHOOL_ID_LU_DF.ncaa_name == school)]
-    if len(school_row) == 0:
-        school_row = _SCHOOL_ID_LU_DF.loc[(_SCHOOL_ID_LU_DF.bd_name == school)]
-    if len(school_row) == 0:
-        return f'''could not find school {school}'''
-    else:
-        return int(school_row['school_id'].values[0])
-
-
-def lookup_school_reverse(school_id):
-    """
-    A function to find a school's name from a school_id
-    Args:
-        school_id as int
-    Returns:
-        school (str): the name of the school
-    Examples:
-        lookup_school_reverse(167)
-        >>> "Cornell"
-    """
-    school_row = _SCHOOL_ID_LU_DF.loc[(
-        _SCHOOL_ID_LU_DF.school_id == school_id)]
-    if len(school_row) == 0:
-        return f'''could not find school {school_id}'''
-    else:
-        return str(school_row['ncaa_name'].values[0])
-
-
-def lookup_player_id(player_name, school):
-    """
-    A function to find a player's id from their name and school.
-    Args:
-        player_name (str): name of player to lookup
-        school: either the ncaa_name of the school (str) of the player
-    Returns:
-        The player_id of the player as an int
-    Examples:
-        lookup_player_id("Jake Gelof", "Virginia")
-        >>> 2486499
-    """
-    player_row = _PLAYER_ID_LU_DF.loc[
-        _PLAYER_ID_LU_DF.name == player_name.title(
-        )]
-    player_row = player_row.loc[player_row.school == school]
-    if len(player_row) == 0:
-        return f'''could not find player {player_name}'''
-    else:
-        return int(player_row['stats_player_seq'].values[0])
-
-
-def lookup_player_reverse(player_id, season):
-    """
-    A function to find a player's name and school from their player_id
-
-    Args:
-        player_name (str): name of player to lookup
-        school: either the ncaa_name of the school (str) of the player
-
-    Returns:
-        The name and school of the player as a strings
-
-    Examples:
-        lookup_player_id("Jake Gelof", "Virginia")
-        >>> 2486499
-
-    """
-    df = _ROSTERS_DF
-    player_row = df.loc[(df.stats_player_seq == player_id)
-                        & (df.season == season)]
-    if len(player_row) == 0:
-        return f'''could not find player {player_id}'''
-    else:
-        return str(player_row['name'].values[0]), str(player_row['school'].values[0]), int(player_row['school_id'].values[0])
-
-
-def lookup_team_info(x):
-    """
-    a function to handle the school/school_id input types
-
-    """
-    if type(x) is int:
-        school_id = x
-        ncaa_name = lookup_school_reverse(school_id)
-    elif type(x) is str:
-        school_id = lookup_school_id(x)
-        ncaa_name = x
-    return str(ncaa_name), int(school_id)
-
-
-def lookup_season_info(x):
-    """
-    handling season/season_id input types
-
-    """
-    if len(str(x)) == 4:
-        season = x
-        season_id, batting_id, pitching_id, fielding_id = lookup_season_ids(x)
-    elif len(str(x)) == 5:
-        season_id = x
-        season, batting_id, pitching_id, fielding_id = lookup_season_reverse(
-            x)
-    return season, season_id, batting_id, pitching_id, fielding_id
+def _has_no_id(tag):
+    return tag.name == 'tr' and not tag.has_attr('id')
 
 
 def _lookup_log_headers(season, variant):
@@ -1047,7 +927,6 @@ def _lookup_log_headers(season, variant):
     """
     if variant == 'batting':
         batting_headers_dict = {
-            2023: [],
             2022: ['G', 'R', 'AB', 'H', '2B', '3B', 'TB', 'HR',
                    'RBI', 'BB', 'HBP', 'SF', 'SH', 'K', 'OPP DP',
                    'CS', 'Picked', 'SB', 'IBB',
@@ -1126,7 +1005,6 @@ def _lookup_log_headers(season, variant):
         headers = batting_headers_dict[season]
     elif variant == 'pitching':
         pitching_headers_dict = {
-            2023: [],
             2022: ['G', 'App', 'GS', 'IP', 'CG', 'H',
                    'R', 'ER', 'BB', 'SO', 'SHO', 'BF', 'P-OAB', '2B-A',
                    '3B-A', 'Bk', 'HR-A', 'WP', 'HB', 'IBB', 'Inh Run',
@@ -1223,7 +1101,6 @@ def _lookup_log_headers(season, variant):
         headers = pitching_headers_dict[season]
     else:
         fielding_headers_dict = {
-            2023: [],
             2022: ['G', 'PO', 'A', 'TC', 'E', 'CI', 'PB', 'SBA', 'CSB', 'IDP',
                    'TP', 'date', 'field', 'season_id', 'opponent_id',
                    'opponent_name', 'innings_played', 'extras', 'runs_scored',
@@ -1288,381 +1165,211 @@ def _lookup_log_headers(season, variant):
     return headers
 
 
-def _adj_position(pos_list):
-    pos = pos_list[-1]
-    if pos in ['1B', '2B', 'SS', '3B', 'UT']:
-        return 'INF'
-    elif pos in ['LF', 'CF', 'RF']:
-        return 'OF'
-    elif pos in ['OF', 'INF', 'C', 'P', 'DH']:
-        return pos
-    else:
-        return 'INF'
-    pass
-
-
-def _adj_position_pitching(pos):
-    if pos in ['P/C', 'ss/p', 'LF/P', 'p', 'P']:
-        return 'P'
-    else:
-        return 'notP'
-    pass
-
-
-def _pos_list(pos):
-    res = []
-    for i in pos.split('/'):
-        res.append(i.upper())
-    return res
-    pass
-
-
-def _has_no_id(tag):
-    return tag.name == 'tr' and not tag.has_attr('id')
-
-
-def _is_box_score(tag):
-    return (tag.name == 'a' and tag.has_attr('href') and 'box_score'
-            in tag.get('href'))
-
-
-def _ncaa_team_ids(division):
-    payload = {
-        "sport_code": "MBA",
-        "academic_year": "2022",
-        "division": "2",
-        "commit": "Submit",
-        "team_individual": "F",
-    }
-    DIV_URL = 'http://stats.ncaa.org/rankings/national_ranking?academic_year=2022.0&division=' + \
-        str(division)+'.0&ranking_period=78.0&sport_code=MBA&stat_seq=210.0&_=1661292352634'
-    page = requests.get(url=DIV_URL, headers=_HEADERS)
-    page = page.content.decode("utf-8")
-    soup = BeautifulSoup(page, "html.parser")
-    soup.find_all('a', text=True)
-    division_df = pd.DataFrame(
-        columns=['team_name', 'team_id', 'conference', 'division'])
-    for a in soup.find_all("a", href=True):
-        if re.search(r"/15860", str(a["href"])):
-            team = a.string
-            conf = team[team.find('(')+1:team.find(')')]
-            t = team.replace(conf, '')
-            team_name = t.replace('()', '').strip()
-            ref = str(a['href']).replace('/team/', '')
-            team_id = int(float(ref.split('/')[0]))
-            info = {
-                'team_name': [team_name],
-                'team_id': [team_id],
-                'conference': [conf],
-                'division': ['III']
-            }
-            team_df = pd.DataFrame.from_dict(info)
-            df = division_df.append(team_df)
-    return df
-    pass
-
-
 # try reading these automatically?
+# html changes year to year make it difficult to automatically read tables
+# and NCAA likes to mess with the columns in different years
+# so this in -elegant solution is what we have
 available_stat_ids = {
     'batting': {
         2022: {
             'two_outs': '17200',
-            'vs_RHP': '17201',
-            'leadoff_pct': '17202',  # ?
-            'rbi_3rd': '17203',  # ?
-            'pinch_hit': '17204',
-            'adv_ops': '17205',  # ?
+            'vs_RH': '17201',
             'runners_on': '17206',
-            'hits_scorepos': '17207',  # ?
-            'vs_LHP': '17208',
-            'with_runrs2': '17212',  # ?
-            'with_scorepos2': '17213',  # ?
-            'bases_empty': '17214',  # ?
+            'with_RISP': '17207',
+            'vs_LH': '17208',
+            'bases_empty': '17214',
             'bases_loaded': '17215'
         },
         2021: {
             'two_outs': '17120',
-            'vs_RHP': '17121',
-            'leadoff_pct': '17122',  # ?
-            'rbi_3rd': '17123',  # ?
-            'pinch_hit': '17124',
-            'adv_ops': '17125',  # ?
+            'vs_RH': '17121',
             'runners_on': '17126',
-            'hits_scorepos': '17127',  # ?
-            'vs_LHP': '17128',
-            'with_runrs2': '17132',  # ?
-            'with_scorepos2': '17133',  # ?
-            'bases_empty': '17134',  # ?
+            'with_RISP': '17127',
+            'vs_LH': '17128',
+            'bases_empty': '17134',
             'bases_loaded': '17135'
         },
         2020: {
             'two_outs': '17060',
-            'vs_RHP': '17061',
-            'leadoff_pct': '17062',  # ?
-            'rbi_3rd': '17063',  # ?
-            'pinch_hit': '17064',
-            'adv_ops': '17065',  # ?
+            'vs_RH': '17061',
             'runners_on': '17066',
-            'hits_scorepos': '17067',  # ?
-            'vs_LHP': '17068',
-            'with_runrs2': '17072',  # ?
-            'with_scorepos2': '17073',  # ?
-            'bases_empty': '17074',  # ?
+            'with_RISP': '17067',
+            'vs_LH': '17068',
+            'bases_empty': '17074',
             'bases_loaded': '17075'
         },
         2019: {
             'two_outs': '16908',
-            'vs_RHP': '16909',
-            'leadoff_pct': '16910',  # ?
-            'rbi_3rd': '16911',  # ?
-            'pinch_hit': '16912',
-            'adv_ops': '16913',  # ?
+            'vs_RH': '16909',
             'runners_on': '16914',
-            'hits_scorepos': '16915',  # ?
-            'vs_LHP': '16916',
-            'with_runrs2': '16920',  # ?
-            'with_scorepos2': '16921',  # ?
-            'bases_empty': '16922',  # ?
+            'with_RISP': '16915',
+            'vs_LH': '16916',
+            'bases_empty': '16922',
             'bases_loaded': '16923'
         },
         2018: {
             'two_outs': '11960',
-            'vs_RHP': '11961',
-            'leadoff_pct': '11962',  # ?
-            'rbi_3rd': '11963',  # ?
-            'pinch_hit': '11964',
-            'adv_ops': '11965',  # ?
+            'vs_RH': '11961',
             'runners_on': '11966',
-            'hits_scorepos': '11967',  # ?
-            'vs_LHP': '11968',
-            'with_runrs2': '11972',  # ?
-            'with_scorepos2': '11973',  # ?
-            'bases_empty': '11974',  # ?
+            'with_RISP': '11967',
+            'vs_LH': '11968',
+            'bases_empty': '11974',
             'bases_loaded': '11975'
         },
         2017: {
             'two_outs': '10580',
-            'vs_RHP': '10581',
-            'leadoff_pct': '10582',  # ?
-            'rbi_3rd': '10583',  # ?
-            'pinch_hit': '10584',
-            'adv_ops': '10585',  # ?
+            'vs_RH': '10581',
             'runners_on': '10586',
-            'hits_scorepos': '10587',  # ?
-            'vs_LHP': '10588',
-            'with_runrs2': '10592',  # ?
-            'with_scorepos2': '10593',  # ?
-            'bases_empty': '10594',  # ?
+            'with_RISP': '10587',
+            'vs_LH': '10588',
+            'bases_empty': '10594',
             'bases_loaded': '10595'
         },
         2016: {
             'two_outs': '10534',
-            'vs_RHP': '10535',
-            'leadoff_pct': '10536',  # ?
-            'rbi_3rd': '10537',  # ?
-            'pinch_hit': '10538',
-            'adv_ops': '10539',  # ?
+            'vs_RH': '10535',
             'runners_on': '10540',
-            'hits_scorepos': '10541',  # ?
-            'vs_LHP': '10542',
-            'with_runrs2': '10546',  # ?
-            'with_scorepos2': '10547',  # ?
-            'bases_empty': '10548',  # ?
+            'with_RISP': '10541',
+            'vs_LH': '10542',
+            'bases_empty': '10548',
             'bases_loaded': '10549'
         },
         2015: {
             'two_outs': '10280',
-            'vs_RHP': '10281',
-            'leadoff_pct': '10282',  # ?
-            'rbi_3rd': '10283',  # ?
-            'pinch_hit': '10284',
-            'adv_ops': '10285',  # ?
+            'vs_RH': '10281',
             'runners_on': '10286',
-            'hits_scorepos': '10287',  # ?
-            'vs_LHP': '10288',
-            'with_runrs2': '10292',  # ?
-            'with_scorepos2': '10293',  # ?
-            'bases_empty': '10294',  # ?
+            'with_RISP': '10287',
+            'vs_LH': '10288',
+            'bases_empty': '10294',
             'bases_loaded': '10295'
         },
         2014: {
             'two_outs': '10200',
-            'vs_RHP': '10201',
-            'leadoff_pct': '10202',  # ?
-            'rbi_3rd': '10203',  # ?
-            'pinch_hit': '10204',
-            'adv_ops': '10205',  # ?
+            'vs_RH': '10201',
             'runners_on': '10206',
-            'hits_scorepos': '10207',  # ?
-            'vs_LHP': '10208',
-            'with_runrs2': '10212',  # ?
-            'with_scorepos2': '10213',  # ?
-            'bases_empty': '10214',  # ?
+            'with_RISP': '10207',
+            'vs_LH': '10208',
+            'bases_empty': '10214',
             'bases_loaded': '10215'
         },
         2013: {
             'two_outs': '10160',
-            'vs_RHP': '10161',
-            'leadoff_pct': '10162',  # ?
-            'rbi_3rd': '10163',  # ?
-            'pinch_hit': '10164',
-            'adv_ops': '10165',  # ?
+            'vs_RH': '10161',
             'runners_on': '10166',
-            'hits_scorepos': '10167',  # ?
-            'vs_LHP': '10168',
-            'with_runrs2': '10172',  # ?
-            'with_scorepos2': '10173',  # ?
-            'bases_empty': '10174',  # ?
+            'with_RISP': '10167',
+            'vs_LH': '10168',
+            'bases_empty': '10174',
             'bases_loaded': '10175'
         },
         2012: {
             'two_outs': '10092',
-            'vs_RHP': '10093',
-            'leadoff_pct': '10094',  # ?
-            'rbi_3rd': '10095',  # ?
-            'pinch_hit': '10096',
-            'adv_ops': '10097',  # ?
+            'vs_RH': '10093',
             'runners_on': '10098',
-            'hits_scorepos': '10099',  # ?
-            'vs_LHP': '10100',
-            'with_runrs2': '10104',  # ?
-            'with_scorepos2': '10105',  # ?
-            'bases_empty': '10106',  # ?
+            'with_RISP': '10099',
+            'vs_LH': '10100',
+            'bases_empty': '10106',
             'bases_loaded': '10107'
         }
     },
     'pitching': {
         2022: {
-            'leadoff_pct': '17216',
-            'runners': '17217',
-            'vs_LHB': '17218',
+            'runners_on': '17217',
+            'vs_LH': '17218',
             'two_outs': '17219',
             'bases_empty': '17220',
-            'with_risp': '17221',
-            'with_risp2': '17222',  # ?
-            'with_runners2': '17223',  # ?
+            'with_RISP': '17221',
             'bases_loaded': '17224',
-            'vs_RHB': '17225'
+            'vs_RH': '17225'
         },
         2021: {
-            'leadoff_pct': '17136',
-            'runners': '17137',
-            'vs_LHB': '17138',
+            'runners_on': '17137',
+            'vs_LH': '17138',
             'two_outs': '17139',
             'bases_empty': '17140',
-            'with_risp': '17141',
-            'with_risp2': '17142',  # ?
-            'with_runners2': '17143',  # ?
+            'with_RISP': '17141',
             'bases_loaded': '17144',
-            'vs_RHB': '17145'
+            'vs_RH': '17145'
         },
         2020: {
-            'leadoff_pct': '17076',
-            'runners': '17077',
-            'vs_LHB': '17078',
+            'runners_on': '17077',
+            'vs_LH': '17078',
             'two_outs': '17079',
             'bases_empty': '17080',
-            'with_risp': '17081',
-            'with_risp2': '17082',  # ?
-            'with_runners2': '17083',  # ?
+            'with_RISP': '17081',
             'bases_loaded': '17084',
-            'vs_RHB': '17085'
+            'vs_RH': '17085'
         },
         2019: {
-            'leadoff_pct': '16924',
-            'runners': '16925',
-            'vs_LHB': '16926',
+            'runners_on': '16925',
+            'vs_LH': '16926',
             'two_outs': '16927',
             'bases_empty': '16928',
-            'with_risp': '16929',
-            'with_risp2': '16930',  # ?
-            'with_runners2': '16931',  # ?
+            'with_RISP': '16929',
             'bases_loaded': '16932',
-            'vs_RHB': '16933'
+            'vs_RH': '16933'
         },
         2018: {
-            'leadoff_pct': '11976',
-            'runners': '11977',
-            'vs_LHB': '11978',
+            'runners_on': '11977',
+            'vs_LH': '11978',
             'two_outs': '11979',
             'bases_empty': '11980',
-            'with_risp': '11981',
-            'with_risp2': '11982',  # ?
-            'with_runners2': '11983',  # ?
+            'with_RISP': '11981',
             'bases_loaded': '11984',
-            'vs_RHB': '11985'
+            'vs_RH': '11985'
         },
         2017: {
-            'leadoff_pct': '10596',
-            'runners': '10597',
-            'vs_LHB': '10598',
+            'runners_on': '10597',
+            'vs_LH': '10598',
             'two_outs': '10599',
             'bases_empty': '10600',
-            'with_risp': '10601',
-            'with_risp2': '10602',  # ?
-            'with_runners2': '10603',  # ?
+            'with_RISP': '10601',
             'bases_loaded': '10604',
-            'vs_RHB': '10605'
+            'vs_RH': '10605'
         },
         2016: {
-            'leadoff_pct': '10550',
-            'runners': '10551',
-            'vs_LHB': '10552',
+            'runners_on': '10551',
+            'vs_LH': '10552',
             'two_outs': '10553',
             'bases_empty': '10554',
-            'with_risp': '10555',
-            'with_risp2': '10556',  # ?
-            'with_runners2': '10557',  # ?
+            'with_RISP': '10555',
             'bases_loaded': '10558',
-            'vs_RHB': '10559'
+            'vs_RH': '10559'
         },
         2015: {
-            'leadoff_pct': '10296',
-            'runners': '10297',
-            'vs_LHB': '10298',
+            'runners_on': '10297',
+            'vs_LH': '10298',
             'two_outs': '10299',
             'bases_empty': '10300',
-            'with_risp': '10301',
-            'with_risp2': '10302',  # ?
-            'with_runners2': '10303',  # ?
+            'with_RISP': '10301',
             'bases_loaded': '10304',
-            'vs_RHB': '10305'
+            'vs_RH': '10305'
         },
         2014: {
-            'leadoff_pct': '17216',
-            'runners': '17217',
-            'vs_LHB': '17218',
-            'two_outs': '17219',
-            'bases_empty': '17220',
-            'with_risp': '17221',
-            'with_risp2': '17222',  # ?
-            'with_runners2': '17223',  # ?
-            'bases_loaded': '17224',
-            'vs_RHB': '17225'
+            'runners_on': '10217',
+            'vs_LH': '10218',
+            'two_outs': '10219',
+            'bases_empty': '10220',
+            'with_RISP': '10221',
+            'bases_loaded': '10224',
+            'vs_RH': '10225'
         },
         2013: {
-            'leadoff_pct': '10176',
-            'runners': '10177',
-            'vs_LHB': '10178',
+            'runners_on': '10177',
+            'vs_LH': '10178',
             'two_outs': '10179',
             'bases_empty': '10180',
-            'with_risp': '10181',
-            'with_risp2': '10182',  # ?
-            'with_runners2': '10183',  # ?
+            'with_RISP': '10181',
             'bases_loaded': '10184',
-            'vs_RHB': '10185'
+            'vs_RH': '10185'
         },
         2012: {
-            'leadoff_pct': '10108',
-            'runners': '10109',
-            'vs_LHB': '10110',
+            'runners_on': '10109',
+            'vs_LH': '10110',
             'two_outs': '10111',
             'bases_empty': '10112',
-            'with_risp': '10113',
-            'with_risp2': '10114',  # ?
-            'with_runners2': '10115',  # ?
+            'with_RISP': '10113',
             'bases_loaded': '10116',
-            'vs_RHB': '10117'
+            'vs_RH': '10117'
         }
     }
 }

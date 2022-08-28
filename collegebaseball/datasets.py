@@ -1,7 +1,7 @@
 from importlib import resources
 
 
-def get_school_table():
+def get_school_path():
     """
 
     """
@@ -11,7 +11,7 @@ def get_school_table():
     return data_file_path
 
 
-def get_player_id_lu_table():
+def get_player_id_lu_path():
     """
 
     """
@@ -21,7 +21,7 @@ def get_player_id_lu_table():
     return data_file_path
 
 
-def get_season_lu_table():
+def get_season_lu_path():
     """
 
     """
@@ -31,7 +31,7 @@ def get_season_lu_table():
     return data_file_path
 
 
-def get_rosters_table():
+def get_rosters_path():
     """
 
     """
@@ -41,7 +41,7 @@ def get_rosters_table():
     return data_file_path
 
 
-def get_players_history_table():
+def get_players_history_path():
     """
 
     """
@@ -51,7 +51,8 @@ def get_players_history_table():
     return data_file_path
 
 
-def get_linear_weights_table():
+# provided by Robert Fray
+def get_linear_weights_path():
     """
 
     """

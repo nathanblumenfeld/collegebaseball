@@ -13,21 +13,7 @@ from tqdm import tqdm
 from time import sleep
 
 
-_SEASON_ID_LU_PATH = datasets.get_season_lu_table()
-_SCHOOL_ID_LU_PATH = datasets.get_school_table()
-_PLAYERS_HISTORY_LU_PATH = datasets.get_players_history_table()
-_PLAYER_ID_LU_PATH = datasets.get_player_id_lu_table()
-_ROSTERS_LU_PATH = datasets.get_rosters_table()
-
-# pre-load lookup tables for performance
-_SCHOOL_ID_LU_DF = pd.read_parquet(_SCHOOL_ID_LU_PATH)
-_SEASON_LU_DF = pd.read_parquet(_SEASON_ID_LU_PATH)
-_PLAYERS_HISTORY_LU_DF = pd.read_parquet(_PLAYERS_HISTORY_LU_PATH)
-_PLAYER_ID_LU_DF = pd.read_parquet(_PLAYER_ID_LU_PATH)
-_ROSTERS_DF = pd.read_parquet(_ROSTERS_LU_PATH)
-
 # GET request options
-_HEADERS = {'User-Agent': 'Mozilla/5.0'}
 _TIMEOUT = 1
 
 
@@ -65,7 +51,8 @@ def download_season_rosters(season: int, division: int, save=True):
     """
     res = pd.DataFrame()
     failures = []
-    school_ids = _SCHOOL_ID_LU_DF.loc[_SCHOOL_ID_LU_DF['division'] == division]
+    df = pd.read_parquet(datasets.get_school_path())
+    school_ids = df.loc[df['division'] == division]
     school_ids = school_ids.school_id.unique()
     for i in school_ids:
         sleep(random.uniform(0, _TIMEOUT))
@@ -90,7 +77,8 @@ def download_team_results(season: int):
     """
     res = pd.DataFrame()
     failures = []
-    for i in tqdm(_SCHOOL_ID_LU_DF.ncaa_name.unique()):
+    df = pd.read_parquet(datasets.get_school_path())
+    for i in tqdm(df.ncaa_name.unique()):
         sleep(random.uniform(0, _TIMEOUT))
         try:
             new = ncaa.ncaa_team_results(int(i), int(season))
@@ -106,7 +94,8 @@ def download_team_stats(season: int, variant: str):
     """
     res = pd.DataFrame()
     failures = []
-    for i in tqdm(_SCHOOL_ID_LU_DF.ncaa_name.unique()):
+    df = pd.read_parquet(datasets.get_school_path())
+    for i in tqdm(df.ncaa_name.unique()):
         sleep(random.uniform(0, _TIMEOUT))
         try:
             new = ncaa.ncaa_team_stats(int(i), int(season), variant)

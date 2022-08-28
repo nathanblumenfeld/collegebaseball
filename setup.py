@@ -1,9 +1,8 @@
-from struct import pack
 import setuptools
 
 setuptools.setup(
     name="collegebaseball",
-    version="1.1.2-alpha",
+    version="1.2.0-alpha",
     url="https://github.com/nathanblumenfeld/collegebaseball",
     author="Nathan Blumenfeld",
     author_email="nathanblumenfeld@gmail.com",

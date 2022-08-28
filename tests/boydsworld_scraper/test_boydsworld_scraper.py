@@ -16,7 +16,7 @@ def generate_boydsworld_games():
     generated_data = []
     for i in teams:
         sleep(random.uniform(0, _TIMEOUT))
-        data = boydsworld_scraper.get_games(i[0], i[1], i[2])
+        data = boydsworld_scraper.boydsworld_team_results(i[0], i[1], i[2])
         generated_data.append(data)
     return generated_data
 

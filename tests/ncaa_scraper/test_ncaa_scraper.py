@@ -1,39 +1,22 @@
 from collegebaseball import ncaa_scraper as ncaa
+from collegebaseball import datasets
+import pandas as pd
 import pytest
 from time import sleep
 import random
 
-
 _TIMEOUT = 1
-
-
-# @ pytest.fixture()
-# def generate_lookup_player_id():
-#     players = [1552732]
-#     res = []
-#     for player in players:
-#         res.append(
-#             ncaa.lookup_player_id(player,)
-#     return res
-
-
-# @ pytest.fixture()
-# def generate_lookup_player_reverse():
-#     players = [1552732, 1882863, 2142781, 2014085, 2457024]
-#     res = []
-#     for player in players:
-#         res.append(
-#             ncaa.lookup_player_reverse(player,)
-#     return res
 
 
 @ pytest.fixture()
 def generate_lookup_school_id():
-    schools = ['Cornell', 'Texas', 'Lincoln Memorial']
+    df = pd.read_parquet(datasets.get_school_path())
+    teams = df.sample(5)['ncaa_name'].unique()
+    # teams = ['Cornell', 'Texas', 'Lincoln Memorial']
     res = []
-    for school in schools:
+    for team in teams:
         res.append(
-            ncaa.lookup_school_id(school))
+            ncaa.lookup_school_id(team))
     return res
 
 
@@ -69,7 +52,8 @@ def generate_lookup_season_reverse():
 
 @ pytest.fixture()
 def generate_lookup_seasons_played():
-    players = []
+    df = pd.read_csv(datasets.get_players_history_path())
+    players = df.sample(5)['stats_player_seq'].unique()
     res = []
     for player in players:
         res.append(
@@ -78,18 +62,20 @@ def generate_lookup_seasons_played():
 
 
 @ pytest.fixture()
-def generate_lookup_team_info():
-    teams = [167, 746, 'Albright', 'Cornell']
+def generate_lookup_school_info():
+    df = pd.read_parquet(datasets.get_school_path())
+    teams = df.sample(5)['school_id'].unique()
+    # teams = [167, 746, 'Albright', 'Cornell']
     res = []
     for team in teams:
         res.append(
-            ncaa.lookup_team_info(team))
+            ncaa.lookup_school_info(int(team)))
     return res
 
 
 @ pytest.fixture()
 def generate_lookup_season_info():
-    seasons = [2022, 2021, 2020]
+    seasons = [x for x in range(2013, 2023)]
     res = []
     for season in seasons:
         res.append(ncaa.lookup_season_info(season))
@@ -116,36 +102,32 @@ def generate_career_stats():
 
 @ pytest.fixture()
 def generate_team_totals():
-    teams = [167, 1257, 641]
-    seasons = [x for x in range(2013, 2023)]
-    batting_splits = [None, 'vs_LHP', 'two_outs']
-    pitching_splits = [None, 'vs_RHB', 'two_outs']
+    df = pd.read_parquet(datasets.get_school_path())
+    teams = df.sample(5)['school_id'].unique()
+    # teams = [167, 641, 9081, 973]  # 1257
+    seasons = [x for x in range(2013, 2022)]
+    splits = ['vs_LH']  # None, 'vs_RH', 'bases_empty', 'two_outs'
     generated_data = []
     for team in teams:
         for season in seasons:
             for variant in ['batting', 'pitching', 'fielding']:
-                if variant == 'batting':
-                    splits = batting_splits
-                elif variant == 'pitching':
-                    splits = pitching_splits
-                else:
-                    splits = [None]
                 for split in splits:
                     sleep(random.uniform(0, _TIMEOUT))
                     generated_data.append(ncaa.ncaa_team_totals(
-                        team, season, variant, include_advanced=False,
+                        int(team), season, variant, include_advanced=False,
                         split=split))
     return generated_data
 
 
 @ pytest.fixture()
 def generate_team_roster():
-    teams = [167, 1257, 641]
-    seasons = [x for x in range(2013, 2023)]
+    df = pd.read_parquet(datasets.get_school_path())
+    teams = df.sample(5)['school_id'].unique()
+    seasons = [x for x in range(2013, 2015)]
     generated_data = []
     for team in teams:
         sleep(random.uniform(0, _TIMEOUT))
-        data = ncaa.ncaa_team_roster(team, seasons)
+        data = ncaa.ncaa_team_roster(int(team), seasons)
         generated_data.append(data)
     return generated_data
 
@@ -168,31 +150,29 @@ def generate_team_season_roster():
 
 @ pytest.fixture()
 def generate_team_stats():
-    teams = [167, 1257, 641]
+    df = pd.read_parquet(datasets.get_school_path())
+    teams = df.sample(5)['school_id'].unique()
     seasons = [x for x in range(2013, 2023)]
-    batting_splits = [None, 'vs_LHP', 'vs_RHP', 'two_outs']
-    pitching_splits = [None, 'vs_LHB', 'vs_RHB', 'two_outs']
+    splits = [None, 'vs_LH', 'vs_RH', 'two_outs', 'bases_loaded']
     generated_data = []
     for team in teams:
         for season in seasons:
             for variant in ['batting', 'pitching', 'fielding']:
-                if variant == 'batting':
-                    splits = batting_splits
-                elif variant == 'pitching':
-                    splits = pitching_splits
-                else:
+                if variant == 'fielding':
                     splits = [None]
                 for split in splits:
                     sleep(random.uniform(0, _TIMEOUT))
                     generated_data.append(ncaa.ncaa_team_stats(
-                        team, season, variant, include_advanced=True,
+                        int(team), season, variant, include_advanced=False,
                         split=split))
     return generated_data
 
 
 @ pytest.fixture()
 def generate_team_game_logs():
-    teams = [167, 1257, 641]
+    df = pd.read_parquet(datasets.get_school_path())
+    teams = df.sample(5)['school_id'].unique()
+    # teams = [167, 1257, 641]
     seasons = [x for x in range(2013, 2023)]
     generated_data = []
     for team in teams:
@@ -200,7 +180,7 @@ def generate_team_game_logs():
             for variant in ['batting', 'pitching', 'fielding']:
                 sleep(random.uniform(0, _TIMEOUT))
                 print(str(team)+' | '+str(season)+' | ' + variant)
-                data = ncaa.ncaa_team_game_logs(team, season, variant)
+                data = ncaa.ncaa_team_game_logs(int(team), season, variant)
                 generated_data.append(data)
     return generated_data
 
@@ -220,7 +200,7 @@ def generate_team_results():
     return generated_data
 
 
-@pytest.fixture()
+@ pytest.fixture()
 def generate_player_game_logs():
     players = [
         (2347219, 2022, 'batting'),  # Sam Kaplan, Cornell
@@ -281,11 +261,6 @@ def test_lookup_season_reverse(generate_lookup_season_reverse):
         assert i is not None
 
 
-# def test_lookup_player_id(generate_lookup_player_id):
-#     for i in generate_lookup_player_id:
-#         assert i is not None
-
-
 def test_lookup_season_info(generate_lookup_season_info):
     for i in generate_lookup_season_info:
         assert i is not None
@@ -294,11 +269,6 @@ def test_lookup_season_info(generate_lookup_season_info):
 def test_lookup_school_id(generate_lookup_school_id):
     for i in generate_lookup_school_id:
         assert i is not None
-
-
-# def test_lookup_player_reverse(generate_lookup_player_reverse):
-#     for i in generate_lookup_player_reverse:
-#         assert i is not None
 
 
 def test_lookup_season_id(generate_lookup_season_id):
@@ -316,6 +286,6 @@ def test_lookup_seasons_played(generate_lookup_seasons_played):
         assert i is not None
 
 
-def test_lookup_team_info(generate_lookup_team_info):
-    for i in generate_lookup_team_info:
+def test_lookup_school_info(generate_lookup_school_info):
+    for i in generate_lookup_school_info:
         assert i is not None

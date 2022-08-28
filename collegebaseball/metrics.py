@@ -9,11 +9,7 @@ created by Nathan Blumenfeld in Spring 2022
 from collegebaseball import datasets
 import pandas as pd
 import numpy as np
-import warnings
-warnings.filterwarnings("ignore")
 
-# filepath of D1 linear weights, provided by Robert Fray
-_LW_FILEPATH = datasets.get_linear_weights_table()
 
 # number of decimal places to round floats to
 ROUND_TO = 3
@@ -39,36 +35,25 @@ def load_linear_weights():
     Linear Weights provided by Robert Fray
     n.b. 2022 Season calculated as avg. of previous 5 seasons
     """
-    res = pd.read_parquet(_LW_FILEPATH)
+    res = pd.read_parquet(datasets.get_linear_weights_path())
     return res
 
 
-# save this as a global to make things faster
-_WEIGHTS_DF = load_linear_weights()
-
-
-def load_season_weights(season):
+def load_season_linear_weights(season):
     """
     Args:
         season (int, YYYY): valid 2013-2022
 
     Returns:
         Single-row Dataframe with the following columns:
-            wOBA: lgwOBA (calculated from totals)
-            wOBAScale
-            wBB
-            wHB
-            w1B
-            w2B
-            w3B
-            wHR
-            R/PA
-            RPG
-            cFIP
             season (primary key)
+            season_id
+            batting_id
+            pitching_id
+            fielding_id
     """
-    _WEIGHTS_DF = load_linear_weights()
-    res = _WEIGHTS_DF.loc[_WEIGHTS_DF['season'] == int(season)]
+    df = load_linear_weights()
+    res = df.loc[df['season'] == int(season)]
     return res
 
 
@@ -90,7 +75,7 @@ def _calculate_woba(row):
     """
     """
     if row['PA'] > 0:
-        season_weights = load_season_weights(row['season'])
+        season_weights = load_season_linear_weights(row['season'])
         numerator = (season_weights['wBB'].values[0] * row['BB']
                      + season_weights['wHBP'].values[0] * row['HBP']
                      + season_weights['w1B'].values[0] * row['1B']
@@ -122,7 +107,7 @@ def calculate_woba_manual(plate_appearances, walks, hits_by_pitch, singles,
         wOBA as a float
     """
     if plate_appearances > 0:
-        season_weights = load_season_weights(season)
+        season_weights = load_season_linear_weights(season)
         numerator = (season_weights['wBB'].values[0] * walks
                      + season_weights['wHBP'].values[0] * hits_by_pitch
                      + season_weights['w1B'].values[0] * singles
@@ -139,7 +124,7 @@ def _calculate_wraa(row):
     """
     """
     if row['PA'] > 0:
-        season_weights = load_season_weights(row['season'])
+        season_weights = load_season_linear_weights(row['season'])
         return round(((row['wOBA'] - season_weights['wOBA'].values[0])
                      / season_weights['wOBAScale'].values[0])
                      * row['PA'], ROUND_TO)
@@ -161,7 +146,7 @@ def calculate_wraa_manual(plate_appearances, woba,  season):
         The weighted runs created above average of a player as a float
     """
     if plate_appearances > 0:
-        season_weights = load_season_weights(season)
+        season_weights = load_season_linear_weights(season)
         return round(((woba - season_weights['wOBA'].values[0])
                      / season_weights['wOBAScale'].values[0])
                      * plate_appearances, ROUND_TO)
@@ -180,7 +165,7 @@ def _calculate_wrc(row):
         wRC = [((wOBA - lgwOBA) / wOBAScale) + (lgR / PA))] * PA
     """
     if row['PA'] > 0:
-        season_weights = load_season_weights(row['season'])
+        season_weights = load_season_linear_weights(row['season'])
         return round((((row['wOBA'] - season_weights['wOBA'].values[0])
                        / season_weights['wOBAScale'].values[0])
                       + season_weights['R/PA'].values[0])
@@ -203,7 +188,7 @@ def calculate_wrc_manual(plate_appearances, woba, season):
         The weighted runs created by a player as a float
     """
     if plate_appearances > 0:
-        season_weights = load_season_weights(season)
+        season_weights = load_season_linear_weights(season)
         return round((((woba - season_weights['wOBA'].values[0])
                        / season_weights['wOBAScale'].values[0])
                       + season_weights['R/PA'].values[0])
@@ -216,20 +201,8 @@ def add_batting_metrics(df):
     """
     Adds the following columns to a given DataFrame:
 
-        PA
-        1B
-        OBP
-        BA
-        SLG
-        OPS
-        ISO
-        PA/HR
-        K
-        BB
-        BABIP
-        wOBA
-        wRAA
-        wRC
+        PA, 1B, OBP, BA, SLG, OPS, ISO, HR/PA, K, BB, BABIP, wOBA, wRAA, wRC,
+        K/BB, K/PA, BB/PA
 
     Args:
         df(DataFrame): the DataFrame to append additional stats to
@@ -267,14 +240,15 @@ def _adjust_innings_pitched(df):
     full_innings = int(df['IP'])
     partial_innings = df['IP'] % 1
     adj_innings = round(partial_innings*(10/3), ROUND_TO)
-    return float(full_innings + adj_innings)
+    res = full_innings + adj_innings
+    return float(res)
 
 
 def _calculate_fip(row):
     """
     """
     if row['IP-adj'] > 0:
-        season_weights = load_season_weights(row['season'])
+        season_weights = load_season_linear_weights(row['season'])
         res = round(((13 * row['HR-A'] + 3 * (row['BB'] + row['HB']) - 2 *
                     row['SO']) / row['IP-adj'])
                     + season_weights['cFIP'].values[0], 3)
@@ -299,7 +273,7 @@ def calculate_fip_manual(HR, BB, HB, K, IP, season):
     Returns:
         FIP as a float
     """
-    season_weights = load_season_weights(season)
+    season_weights = load_season_linear_weights(season)
     return round(((13 * HR + 3 * (BB + HB) - 2 * K) / IP)
                  + season_weights['cFIP'].values[0], ROUND_TO)
 
@@ -307,23 +281,9 @@ def calculate_fip_manual(HR, BB, HB, K, IP, season):
 def add_pitching_metrics(df):
     """
     Adds the following columns to a given DataFrame:
-        PA
-        1B-A
-        OBP-against
-        BA-against
-        SLG-against
-        OPS-against
-        K/PA
-        K/9
-        BB/PA
-        BB/9
-        BABIP-against
-        FIP
-        ERA
-        WHIP
-        IP/App
-        PA/HR
-        Pitches/PA
+        PA, 1B-A, OBP-against, BA-against, SLG-against, OPS-against
+        K/PA, K/9, BB/PA, BB/9, BABIP-against, FIP, ERA, WHIP, IP/App
+        PA/HR, Pitches/PA, Pitches/IP, Pitches/App, GO/FO
 
     Args:
         df(DataFrame): the DataFrame to append additional stats to
@@ -383,7 +343,6 @@ def add_pitching_metrics(df):
     if len(df.loc[df['Pitches/PA'] > 0]) < 1:
         df = df.drop(columns=['Pitches/PA'], inplace=False)
     df = _set_metric_dtypes(df, 'pitching')
-
     return df
 
 
@@ -405,11 +364,9 @@ def _set_metric_dtypes(df, variant):
                         'BABIP', 'wOBA', 'wRAA', 'wRC'],
             'int16': ['PA', '1B']
         }
-
     for i in data_types.keys():
         for j in data_types[i]:
             if j in cols:
                 df[j] = df[j].astype(i)
-
     df.fillna(value=0.00, inplace=True)
     return df

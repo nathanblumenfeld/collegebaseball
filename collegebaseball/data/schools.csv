@@ -1,0 +1,946 @@
+ncaa_name,bd_name,school_id,max_season,min_season,division
+Abilene Christian,Abilene Christian,2,2022,2013,1
+Air Force,Air Force,721,2022,2013,1
+Akron,Akron,5,2022,2013,1
+Alabama,Alabama,8,2022,2013,1
+Alabama A&M,Alabama A&M,6,2022,2013,1
+Alabama St.,Alabama State,7,2022,2013,1
+UAB,Alabama-Birmingham,9,2022,2013,1
+Albany (NY),Albany,14,2022,2013,1
+Alcorn,Alcorn State,17,2022,2013,1
+Appalachian St.,Appalachian State,27,2022,2013,1
+Arizona,Arizona,29,2022,2013,1
+Arizona St.,Arizona State,28,2022,2013,1
+Arkansas,Arkansas,31,2022,2013,1
+Arkansas St.,Arkansas State,30,2022,2013,1
+Little Rock,Arkansas-Little Rock,32,2022,2013,1
+Ark.-Pine Bluff,Arkansas-Pine Bluff,2678,2022,2013,1
+Army West Point,Army,725,2022,2013,1
+Auburn,Auburn,37,2022,2013,1
+Austin Peay,Austin Peay State,43,2022,2013,1
+Ball St.,Ball State,47,2022,2013,1
+Baylor,Baylor,51,2022,2013,1
+Belmont,Belmont,14927,2022,2013,1
+Bethune-Cookman,Bethune-Cookman,61,2022,2013,1
+Binghamton,Binghamton,62,2022,2013,1
+Boise St.,Boise State,66,2022,2013,1
+Boston College,Boston College,67,2022,2013,1
+Bowling Green,Bowling Green State,71,2022,2013,1
+Bradley,Bradley,72,2022,2013,1
+BYU,Brigham Young,77,2022,2013,1
+Brown,Brown,80,2022,2013,1
+Bryant,Bryant,81,2022,2013,1
+Bucknell,Bucknell,83,2022,2013,1
+Buffalo,Buffalo,86,2022,2013,1
+Butler,Butler,87,2022,2013,1
+CSU Bakersfield,CSU Bakersfield,94,2022,2013,1
+Cal Poly,Cal Poly,90,2022,2013,1
+Cal St. Fullerton,Cal State Fullerton,97,2022,2013,1
+CSUN,Cal State Northridge,101,2022,2013,1
+California,California,107,2022,2013,1
+California Baptist,California Baptist,30135,2022,2013,1
+Campbell,Campbell,115,2022,2013,1
+Canisius,Canisius,116,2022,2013,1
+Central Ark.,Central Arkansas,1004,2022,2013,1
+Central Conn. St.,Central Connecticut State,127,2022,2013,1
+UCF,Central Florida,128,2022,2013,1
+Central Mich.,Central Michigan,129,2022,2013,1
+Charleston So.,Charleston Southern,48,2022,2013,1
+Chicago St.,Chicago State,136,2022,2013,1
+Cincinnati,Cincinnati,140,2022,2013,1
+Clemson,Clemson,147,2022,2013,1
+Coastal Carolina,Coastal Carolina,149,2022,2013,1
+Col. of Charleston,College of Charleston,1014,2022,2013,1
+Columbia,Columbia,158,2022,2013,1
+UConn,Connecticut,164,2022,2013,1
+Coppin St.,Coppin State,165,2022,2013,1
+Cornell,Cornell,167,2022,2013,1
+Creighton,Creighton,169,2022,2013,1
+DBU,Dallas Baptist,1045,2022,2013,1
+Dartmouth,Dartmouth,172,2022,2013,1
+Davidson,Davidson,173,2022,2013,1
+Dayton,Dayton,175,2022,2013,1
+Delaware,Delaware,180,2022,2013,1
+Delaware St.,Delaware State,178,2022,2013,1
+Dixie St.,Dixie State,30095,2022,2013,1
+Duke,Duke,193,2022,2013,1
+East Carolina,East Carolina,196,2022,2013,1
+ETSU,East Tennessee,198,2022,2013,1
+Eastern Ill.,Eastern Illinois,201,2022,2013,1
+Eastern Ky.,Eastern Kentucky,202,2022,2013,1
+Eastern Mich.,Eastern Michigan,204,2022,2013,1
+Elon,Elon,1068,2022,2013,1
+Evansville,Evansville,219,2022,2013,1
+Fairfield,Fairfield,220,2022,2013,1
+Fairleigh Dickinson,Fairleigh Dickinson,222,2022,2013,1
+Florida,Florida,235,2022,2013,1
+Florida A&M,Florida A&M,228,2022,2013,1
+Fla. Atlantic,Florida Atlantic,229,2022,2013,1
+FGCU,Florida Gulf Coast,28755,2022,2013,1
+FIU,Florida International,231,2022,2013,1
+Florida St.,Florida State,234,2022,2013,1
+Fordham,Fordham,236,2022,2013,1
+Fresno St.,Fresno State,96,2022,2013,1
+Furman,Furman,244,2022,2013,1
+Gardner-Webb,Gardner-Webb,1092,2022,2013,1
+George Mason,George Mason,248,2022,2013,1
+George Washington,George Washington,249,2022,2013,1
+Georgetown,Georgetown,251,2022,2013,1
+Georgia,Georgia,257,2022,2013,1
+Ga. Southern,Georgia Southern,253,2022,2013,1
+Georgia St.,Georgia State,254,2022,2013,1
+Georgia Tech,Georgia Tech,255,2022,2013,1
+Gonzaga,Gonzaga,260,2022,2013,1
+Grambling,Grambling State,261,2022,2013,1
+Grand Canyon,Grand Canyon,1104,2022,2013,1
+Hartford,Hartford,272,2022,2013,1
+Harvard,Harvard,275,2022,2013,1
+Hawaii,Hawaii,277,2022,2013,1
+High Point,High Point,19651,2022,2013,1
+Hofstra,Hofstra,283,2022,2013,1
+Holy Cross,Holy Cross,285,2022,2013,1
+Houston,Houston,288,2022,2013,1
+Houston Baptist,Houston Baptist,287,2022,2013,1
+Illinois,Illinois,301,2022,2013,1
+Illinois St.,Illinois State,299,2022,2013,1
+UIC,Illinois-Chicago,302,2022,2013,1
+UIW,Incarnate World,2743,2022,2013,1
+Indiana,Indiana,306,2022,2013,1
+Indiana St.,Indiana State,305,2022,2013,1
+Iona,Iona,310,2022,2013,1
+Iowa,Iowa,312,2022,2013,1
+Jackson St.,Jackson State,314,2022,2013,1
+Jacksonville,Jacksonville,316,2022,2013,1
+Jacksonville St.,Jacksonville State,315,2022,2013,1
+James Madison,James Madison,317,2022,2013,1
+Kansas,Kansas,328,2022,2013,1
+Kansas St.,Kansas State,327,2022,2013,1
+Kennesaw St.,Kennesaw State,1157,2022,2013,1
+Kent St.,Kent State,331,2022,2013,1
+Kentucky,Kentucky,334,2022,2013,1
+La Salle,LaSalle,340,2022,2013,1
+Lafayette,Lafayette,342,2022,2013,1
+Lamar University,Lamar,346,2022,2013,1
+Lehigh,Lehigh,352,2022,2013,1
+Liberty,Liberty,355,2022,2013,1
+Lipscomb,Lipscomb,28600,2022,2013,1
+Long Beach St.,Long Beach State,99,2022,2013,1
+LIU,Long Island,361,2022,2013,1
+Longwood,Longwood,363,2022,2013,1
+LSU,Louisiana State,365,2022,2013,1
+Louisiana Tech,Louisiana Tech,366,2022,2013,1
+La.-Monroe,Louisiana-Monroe,498,2022,2013,1
+Louisville,Louisville,367,2022,2013,1
+LMU (CA),Loyola Marymount,370,2022,2013,1
+Maine,Maine,380,2022,2013,1
+Manhattan,Manhattan,381,2022,2013,1
+Marist,Marist,386,2022,2013,1
+Marshall,Marshall,388,2022,2013,1
+Maryland,Maryland,392,2022,2013,1
+UMBC,Maryland-Baltimore County,391,2022,2013,1
+UMES,Maryland-Eastern Shore,393,2022,2013,1
+Massachusetts,Massachusetts,400,2022,2013,1
+UMass Lowell,Massachusetts-Lowell,368,2022,2013,1
+McNeese,McNeese State,402,2022,2013,1
+Memphis,Memphis,404,2022,2013,1
+Mercer,Mercer,406,2022,2013,1
+Miami (FL),"Miami, Florida",415,2022,2013,1
+Miami (OH),"Miami, Ohio",414,2022,2013,1
+Michigan,Michigan,418,2022,2013,1
+Michigan St.,Michigan State,416,2022,2013,1
+Middle Tenn.,Middle Tennessee,419,2022,2013,1
+Minnesota,Minnesota,428,2022,2013,1
+Ole Miss,Mississippi,433,2022,2013,1
+Mississippi St.,Mississippi State,430,2022,2013,1
+Mississippi Val.,Mississippi Valley State,432,2022,2013,1
+Missouri,Missouri,434,2022,2013,1
+Missouri St.,Missouri State,669,2022,2013,1
+Monmouth,Monmouth,439,2022,2013,1
+Morehead St.,Morehead State,444,2022,2013,1
+Mount St. Mary's,Mount St. Mary's,450,2022,2013,1
+Murray St.,Murray State,454,2022,2013,1
+Navy,Navy,726,2022,2013,1
+Nebraska,Nebraska,463,2022,2013,1
+Omaha,Nebraska-Omaha,464,2022,2013,1
+Nevada,Nevada,466,2022,2013,1
+UNLV,Nevada-Las Vegas,465,2022,2013,1
+NJIT,New Jersey Tech,471,2022,2013,1
+New Mexico,New Mexico,473,2022,2013,1
+New Mexico St.,New Mexico State,472,2022,2013,1
+New Orleans,New Orleans,474,2022,2013,1
+New York Tech,New York Tech,477,2022,2013,1
+Niagara,Niagara,482,2022,2013,1
+Nicholls St.,Nicholls State,483,2022,2013,1
+Norfolk St.,Norfolk State,485,2022,2013,1
+North Ala.,North Alabama,487,2022,2013,1
+North Carolina,North Carolina,457,2022,2013,1
+N.C. A&T,North Carolina A&T,488,2022,2013,1
+N.C. Central,North Carolina Central,489,2022,2013,1
+NC State,North Carolina State,490,2022,2013,1
+UNC Asheville,North Carolina-Asheville,456,2022,2013,1
+Charlotte,North Carolina-Charlotte,458,2022,2013,1
+UNC Greensboro,North Carolina-Greensboro,459,2022,2013,1
+UNCW,North Carolina-Wilmington,460,2022,2013,1
+North Dakota,North Dakota,494,2022,2013,1
+North Dakota St.,North Dakota State,493,2022,2013,1
+North Florida,North Florida,2711,2022,2013,1
+Northeastern,Northeastern,500,2022,2013,1
+Northern Colo.,Northern Colorado,502,2022,2013,1
+Northern Ill.,Northern Illinois,503,2022,2013,1
+Northern Ky.,Northern Kentucky,505,2022,2013,1
+Northwestern,Northwestern,509,2022,2013,1
+Northwestern St.,Northwestern State,508,2022,2013,1
+Notre Dame,Notre Dame,513,2022,2013,1
+Oakland,Oakland,514,2022,2013,1
+Ohio,Ohio,519,2022,2013,1
+Ohio St.,Ohio State,518,2022,2013,1
+Oklahoma,Oklahoma,522,2022,2013,1
+Oklahoma St.,Oklahoma State,521,2022,2013,1
+Old Dominion,Old Dominion,523,2022,2013,1
+Oral Roberts,Oral Roberts,527,2022,2013,1
+Oregon,Oregon,529,2022,2013,1
+Oregon St.,Oregon State,528,2022,2013,1
+Pacific,Pacific,534,2022,2013,1
+Penn St.,Penn State,539,2022,2013,1
+Penn,Pennslyvania,540,2022,2013,1
+Pepperdine,Pepperdine,541,2022,2013,1
+Pittsburgh,Pittsburgh,545,2022,2013,1
+Portland,Portland,551,2022,2013,1
+Prairie View,Prairie View A&M,553,2022,2013,1
+Presbyterian,Presbyterian,1320,2022,2013,1
+Princeton,Princeton,554,2022,2013,1
+Purdue,Purdue,559,2022,2013,1
+Quinnipiac,Quinnipiac,562,2022,2013,1
+Radford,Radford,563,2022,2013,1
+Rhode Island,Rhode Island,572,2022,2013,1
+Rice,Rice,574,2022,2013,1
+Richmond,Richmond,575,2022,2013,1
+Rider,Rider,576,2022,2013,1
+Rutgers,Rutgers,587,2022,2013,1
+Sacramento St.,Sacramento State,102,2022,2013,1
+Sacred Heart,Sacred Heart,590,2022,2013,1
+Sam Houston St.,Sam Houston State,624,2022,2013,1
+Samford,Samford,625,2022,2013,1
+San Diego,San Diego,627,2022,2013,1
+San Diego St.,San Diego State,626,2022,2013,1
+San Francisco,San Francisco,629,2022,2013,1
+San Jose St.,San Jose State,630,2022,2013,1
+Santa Clara,Santa Clara,631,2022,2013,1
+Savannah St.,Savannah State,632,2022,2013,1
+Seattle U,Seattle,1356,2022,2013,1
+Seton Hall,Seton Hall,635,2022,2013,1
+Siena,Siena,639,2022,2013,1
+South Alabama,South Alabama,646,2022,2013,1
+South Carolina,South Carolina,648,2022,2013,1
+USC Upstate,South Carolina-Upstate,10411,2022,2013,1
+South Dakota St.,South Dakota State,649,2022,2013,1
+South Fla.,South Florida,651,2022,2013,1
+Southeast Mo. St.,Southeast Missouri State,654,2022,2013,1
+Southeastern La.,Southeastern Louisiana,655,2022,2013,1
+Southern U.,Southern,665,2022,2013,1
+Southern California,Southern California,657,2022,2013,1
+Southern Ill.,Southern Illinois,659,2022,2013,1
+SIUE,Southern Illinois-Edwardsville,660,2022,2013,1
+Southern Miss.,Southern Mississippi,664,2022,2013,1
+Saint Mary's (CA),St Mary's,610,2022,2013,1
+St. Bonaventure,St. Bonaventure,596,2022,2013,1
+St. John's (NY),St. John's,603,2022,2013,1
+Saint Joseph's,St. Joseph's,606,2022,2013,1
+Saint Louis,St. Louis,609,2022,2013,1
+Saint Peter's,St. Peter's,617,2022,2013,1
+Stanford,Stanford,674,2022,2013,1
+SFA,Stephen F. Austin State,676,2022,2013,1
+Stetson,Stetson,678,2022,2013,1
+Stony Brook,Stony Brook,683,2022,2013,1
+Tarleton St.,Tarleton State,1395,2022,2013,1
+Temple,Temple,690,2022,2013,1
+Tennessee,Tennessee,694,2022,2013,1
+Tennessee Tech,Tennessee Tech,692,2022,2013,1
+UT Martin,Tennessee-Martin,695,2022,2013,1
+Texas,Texas,703,2022,2013,1
+Texas A&M,Texas A&M,697,2022,2013,1
+A&M-Corpus Christi,Texas A&M-Corpus Christi,26172,2022,2013,1
+TCU,Texas Christian,698,2022,2013,1
+Texas Southern,Texas Southern,699,2022,2013,1
+Texas St.,Texas State,670,2022,2013,1
+Texas Tech,Texas Tech,700,2022,2013,1
+UT Arlington,Texas-Arlington,702,2022,2013,1
+UTRGV,Texas-Rio Grande Valley,536,2022,2013,1
+UTSA,Texas-San Antonio,706,2022,2013,1
+The Citadel,The Citadel,141,2022,2013,1
+Toledo,Toledo,709,2022,2013,1
+Towson,Towson,711,2022,2013,1
+Troy,Troy,716,2022,2013,1
+Tulane,Tulane,718,2022,2013,1
+UC Davis,UC Davis,108,2022,2013,1
+UC Irvine,UC Irvine,109,2022,2013,1
+UC Riverside,UC Riverside,111,2022,2013,1
+UC Santa Barbara,UC Santa Barbara,104,2022,2013,1
+UCLA,UCLA,110,2022,2013,1
+Utah,Utah,732,2022,2013,1
+Utah Valley,Utah Valley,30024,2022,2013,1
+VMI,VMI,741,2022,2013,1
+Valparaiso,Valparaiso,735,2022,2013,1
+Vanderbilt,Vanderbilt,736,2022,2013,1
+Villanova,Villanova,739,2022,2013,1
+Virginia,Virginia,746,2022,2013,1
+VCU,Virginia Commonwealth,740,2022,2013,1
+Virginia Tech,Virginia Tech,742,2022,2013,1
+Wagner,Wagner,748,2022,2013,1
+Wake Forest,Wake Forest,749,2022,2013,1
+Washington,Washington,756,2022,2013,1
+Washington St.,Washington State,754,2022,2013,1
+West Virginia,West Virginia,768,2022,2013,1
+Western Caro.,Western Carolina,769,2022,2013,1
+Western Ill.,Western Illinois,771,2022,2013,1
+Western Ky.,Western Kentucky,772,2022,2013,1
+Western Mich.,Western Michigan,774,2022,2013,1
+Wichita St.,Wichita State,782,2022,2013,1
+William & Mary,William and Mary,786,2022,2013,1
+Winthrop,Winthrop,792,2022,2013,1
+Milwaukee,Wisconsin-Milwaukee,797,2022,2013,1
+Wofford,Wofford,2915,2022,2013,1
+Wright St.,Wright State,810,2022,2013,1
+Xavier,Xavier,812,2022,2013,1
+Yale,Yale,813,2022,2013,1
+Youngstown St.,Youngstown State,817,2022,2013,1
+Bellarmine,,52,2022,2013,1
+UC San Diego,,112,2022,2013,1
+Purdue Fort Wayne,,308,2022,2013,1
+Merrimack,,410,2022,2013,1
+Louisiana,,671,2022,2013,1
+Colorado Mesa,,11416,2022,2013,2
+Spring Hill,,30191,2022,2013,2
+Central Mo.,,130,2022,2013,2
+Angelo St.,,25,2022,2013,2
+Francis Marion,,1085,2022,2013,2
+Albany St.  (SIAC),,13,2022,2013,2
+Drury,,1057,2022,2013,2
+Chico St.,,95,2022,2013,2
+Concord,,1028,2022,2013,2
+Savannah St.,,632,2022,2013,2
+Ill. Springfield,,30050,2022,2013,2
+MSU Denver,,413,2022,2013,2
+William Jewell,,30120,2022,2013,2
+Newberry,,1257,2022,2013,2
+West Tex. A&M,,767,2022,2013,2
+Lubbock Christian,,30177,2022,2013,2
+North Greenville,,9223,2022,2013,2
+Augustana  (NSIC),,41,2022,2013,2
+Northeastern St.,,12810,2022,2013,2
+Charleston  (MEC),,1013,2022,2013,2
+Minnesota St.,,383,2022,2013,2
+Slippery Rock,,643,2022,2013,2
+Molloy,,437,2022,2013,2
+CSU Pueblo,,2720,2022,2013,2
+Millersville,,423,2022,2013,2
+Regis  (RMAC),,568,2022,2013,2
+Okla. Baptist,,30202,2022,2013,2
+Pittsburg St.,,1314,2022,2013,2
+Colo. Christian,,11403,2022,2013,2
+Adelphi,,3,2022,2013,2
+Columbus St.,,159,2022,2013,2
+UC-Colo. Springs,,9754,2022,2013,2
+Ashland,,35,2022,2013,2
+Lenoir-Rhyne,,1170,2022,2013,2
+Miles,,422,2022,2013,2
+Trevecca Nazarene,,30002,2022,2013,2
+Colo. Sch. of Mines,,155,2022,2013,2
+Quincy,,561,2022,2013,2
+Young Harris,,30154,2022,2013,2
+UNC Pembroke,,537,2022,2013,2
+Alabama Huntsville,,10,2022,2013,2
+Southern Ark.,,1376,2022,2013,2
+Montevallo,,1238,2022,2013,2
+Wingate,,1462,2022,2013,2
+Maryville  (GLVC),,395,2022,2013,2
+N.M. Highlands,,8577,2022,2013,2
+Point Loma,,30149,2022,2013,2
+St. Edward's,,1334,2022,2013,2
+Mo. Southern St.,,9012,2022,2013,2
+Tex. A&M-Kingsville,,696,2022,2013,2
+Florida Tech,,230,2022,2013,2
+Georgia College,,1096,2022,2013,2
+Southern N.H.,,468,2022,2013,2
+Cal Poly Pomona,,91,2022,2013,2
+Queens  (SAC),,11504,2022,2013,2
+Barton,,15646,2022,2013,2
+Erskine,,1072,2022,2013,2
+Chestnut Hill,,21323,2022,2013,2
+Indiana  (PSAC),,307,2022,2013,2
+Pace,,533,2022,2013,2
+Tiffin,,1403,2022,2013,2
+St. Cloud St.,,598,2022,2013,2
+Tampa,,689,2022,2013,2
+Rockhurst,,1328,2022,2013,2
+Northwestern Okla.,,30178,2022,2013,2
+Nova Southeastern,,24639,2022,2013,2
+Delta St.,,181,2022,2013,2
+Jefferson,,543,2022,2013,2
+Saint Leo,,608,2022,2013,2
+Davenport,,30221,2022,2013,2
+Washburn,,2814,2022,2013,2
+Notre Dame  (MEC),,30126,2022,2013,2
+Cedarville,,30124,2022,2013,2
+Purdue Northwest,,30222,2022,2013,2
+Southeastern Okla.,,1371,2022,2013,2
+UT Tyler,,30028,2022,2013,2
+Saginaw Valley,,591,2022,2013,2
+Cal U  (PSAC),,106,2022,2013,2
+Carson-Newman,,1000,2022,2013,2
+AUM,,30093,2022,2013,2
+Mount Olive,,1245,2022,2013,2
+Central Wash.,,1010,2022,2013,2
+Hillsdale,,280,2022,2013,2
+Wilmington  (CACC),,1460,2022,2013,2
+Cal St. Monterey Bay,,30055,2022,2013,2
+West Ga.,,766,2022,2013,2
+Northwood,,510,2022,2013,2
+Missouri S&T,,435,2022,2013,2
+Franklin Pierce,,241,2022,2013,2
+McKendree,,30138,2022,2013,2
+Grand Valley St.,,262,2022,2013,2
+Glenville St.,,1098,2022,2013,2
+Cal St. San Marcos,,30198,2022,2013,2
+Rollins,,584,2022,2013,2
+Adams St.,,929,2022,2013,2
+Wayne St.  (GLIAC),,757,2022,2013,2
+Azusa Pacific,,30146,2022,2013,2
+East Stroudsburg,,197,2022,2013,2
+Queens  (ECC),,560,2022,2013,2
+Belmont Abbey,,2683,2022,2013,2
+Wheeling,,12799,2022,2013,2
+West Virginia St.,,1439,2022,2013,2
+Tex. A&M Int'l,,30090,2022,2013,2
+Lee,,30013,2022,2013,2
+Kentucky St.,,332,2022,2013,2
+Arkansas Tech,,947,2022,2013,2
+Minot St.,,30125,2022,2013,2
+Southern Nazarene,,30152,2022,2013,2
+Southwest Minn. St.,,8736,2022,2013,2
+Cal St. San B'dino,,93,2022,2013,2
+Union  (Gulf South),,30153,2022,2013,2
+Anderson  (SAC),,13028,2022,2013,2
+Southwestern Okla.,,8744,2022,2013,2
+Seton Hill,,30063,2022,2013,2
+Cal State LA,,100,2022,2013,2
+St. Mary's  (Lone Star),,1346,2022,2013,2
+Fresno Pacific,,30147,2022,2013,2
+Cal St. Dom. Hills,,92,2022,2013,2
+Lewis,,354,2022,2013,2
+Henderson St.,,1123,2022,2013,2
+Bloomsburg,,65,2022,2013,2
+West Chester,,765,2022,2013,2
+West Ala.,,358,2022,2013,2
+Bloomfield,,984,2022,2013,2
+Ouachita Baptist,,1289,2022,2013,2
+Shorter,,30151,2022,2013,2
+Minn. Duluth,,427,2022,2013,2
+King  (Conference Carolinas),,30051,2022,2013,2
+Central Okla.,,1009,2022,2013,2
+Hawaii Pacific,,2696,2022,2013,2
+Le Moyne,,349,2022,2013,2
+Mercyhurst,,408,2022,2013,2
+Newman,,30054,2022,2013,2
+Southern Conn. St.,,658,2022,2013,2
+St. Thomas Aquinas,,1348,2022,2013,2
+Walsh,,30141,2022,2013,2
+Rogers St.,,30180,2022,2013,2
+Augusta,,39,2022,2013,2
+Goldey-Beacom,,8366,2022,2013,2
+Benedict,,55,2022,2013,2
+Hawaii Hilo,,2697,2022,2013,2
+Lynn,,20794,2022,2013,2
+Lock Haven,,360,2022,2013,2
+UIndy,,309,2022,2013,2
+Eckerd,,208,2022,2013,2
+Valdosta St.,,734,2022,2013,2
+Lincoln Memorial,,1176,2022,2013,2
+Mansfield,,384,2022,2013,2
+Salem  (DII Independent),,19117,2022,2013,2
+Sioux Falls,,30128,2022,2013,2
+Saint Rose,,1347,2022,2013,2
+Shippensburg,,638,2022,2013,2
+Lane,,347,2022,2013,2
+Malone,,30137,2022,2013,2
+Barry,,49,2022,2013,2
+Post,,1318,2022,2013,2
+Caldwell,,995,2022,2013,2
+New Haven,,470,2022,2013,2
+American Int'l,,22,2022,2013,2
+Emory & Henry,,216,2022,2013,2
+Flagler,,30092,2022,2013,2
+Harding,,1116,2022,2013,2
+Tex. Permian Basin,,30088,2022,2013,2
+Lander,,1167,2022,2013,2
+Bluefield St.,,985,2022,2013,2
+Ark.-Monticello,,8411,2022,2013,2
+Fairmont St.,,1076,2022,2013,2
+Mercy,,407,2022,2013,2
+Claflin,,30058,2022,2013,2
+North Georgia,,30052,2022,2013,2
+Stonehill,,682,2022,2013,2
+Fla. Southern,,233,2022,2013,2
+Eastern N.M.,,206,2022,2013,2
+Morehouse,,445,2022,2013,2
+Cal St. East Bay,,98,2022,2013,2
+Northwest Nazarene,,1274,2022,2013,2
+Southern Wesleyan,,30192,2022,2013,2
+Okla. Christian,,30179,2022,2013,2
+Sonoma St.,,645,2022,2013,2
+Southern Ind.,,661,2022,2013,2
+Mont. St. Billings,,205,2022,2013,2
+Ky. Wesleyan,,333,2022,2013,2
+Chowan,,8875,2022,2013,2
+Assumption,,36,2022,2013,2
+Bentley,,56,2022,2013,2
+Lindenwood,,30136,2022,2013,2
+Tusculum,,12830,2022,2013,2
+Mo.-St. Louis,,436,2022,2013,2
+Cameron,,996,2022,2013,2
+St. Anselm,,593,2022,2013,2
+Ark.-Fort Smith,,30105,2022,2013,2
+Ga. Southwestern,,1097,2022,2013,2
+Gannon,,246,2022,2013,2
+West Florida,,11740,2022,2013,2
+Christian Brothers,,1015,2022,2013,2
+Wayne St.  (NSIC),,1433,2022,2013,2
+Mars Hill,,1199,2022,2013,2
+Dominican  (CACC),,8956,2022,2013,2
+UVA Wise,,30181,2022,2013,2
+Felician,,23157,2022,2013,2
+USciences,,28594,2022,2013,2
+Mary,,30075,2022,2013,2
+Southwest Baptist,,2755,2022,2013,2
+Emporia St.,,1071,2022,2013,2
+Truman St.,,499,2022,2013,2
+CUI,,30199,2022,2013,2
+Biola,,30220,2022,2013,2
+Holy Names,,30175,2022,2013,2
+Pitt.-Johnstown,,546,2022,2013,2
+Northwest Mo. St.,,507,2022,2013,2
+Missouri Western,,9013,2022,2013,2
+Ohio Dominican,,30119,2022,2013,2
+Shepherd,,10870,2022,2013,2
+Embry-Riddle  (Sunshine State),,9680,2022,2013,2
+East Central,,8965,2022,2013,2
+Catawba,,1001,2022,2013,2
+USC Aiken,,11276,2022,2013,2
+West Va. Wesleyan,,9630,2022,2013,2
+Upper Iowa,,728,2022,2013,2
+Mississippi Col.,,429,2022,2013,2
+Saint Martin's,,1343,2022,2013,2
+Findlay,,1079,2022,2013,2
+Virginia St.,,743,2022,2013,2
+San Fran. St.,,628,2022,2013,2
+Stanislaus St.,,103,2022,2013,2
+Coker,,1023,2022,2013,2
+Academy of Art,,30123,2022,2013,2
+Bridgeport,,74,2022,2013,2
+Concordia-St. Paul,,9081,2022,2013,2
+Western Ore.,,1446,2022,2013,2
+Winona St.,,790,2022,2013,2
+Emmanuel  (Conference Carolinas),,30193,2022,2013,2
+Saint Michael's,,613,2022,2013,2
+LeMoyne-Owen,,350,2022,2013,2
+Palm Beach Atl.,,30045,2022,2013,2
+West Liberty,,1438,2022,2013,2
+Minn.-Crookston,,27854,2022,2013,2
+Clark Atlanta,,144,2022,2013,2
+Alderson Broaddus,,934,2022,2013,2
+Northern St.,,1266,2022,2013,2
+Bemidji St.,,54,2022,2013,2
+Limestone,,1174,2022,2013,2
+Kutztown,,339,2022,2013,2
+Tuskegee,,720,2022,2013,2
+Fort Hays St.,,9011,2022,2013,2
+Lincoln  (ECC),,357,2022,2013,2
+Lake Erie,,2746,2022,2013,2
+Clarion,,143,2022,2013,2
+Nyack,,1277,2022,2013,2
+Wis.-Parkside,,799,2022,2013,2
+Davis & Elkins,,174,2022,2013,2
+Marietta,,385,2022,2013,3
+St. Joseph's  (Skyline),,1340,2022,2013,3
+Wilson,,12973,2022,2013,3
+Baldwin Wallace,,46,2022,2013,3
+Penn St.-Abington,,30114,2022,2013,3
+Randolph-Macon,,565,2022,2013,3
+Montclair St.,,442,2022,2013,3
+Rhode Island Col.,,571,2022,2013,3
+Middlebury,,420,2022,2013,3
+LaGrange,,1162,2022,2013,3
+Eastern Conn. St.,,200,2022,2013,3
+Aurora,,42,2022,2013,3
+Kalamazoo,,326,2022,2013,3
+Widener,,783,2022,2013,3
+Gust. Adolphus,,266,2022,2013,3
+La Verne,,341,2022,2013,3
+Bethel  (MIAC),,60,2022,2013,3
+Anna Maria,,26,2022,2013,3
+Birmingham-So.,,28593,2022,2013,3
+Berry,,973,2022,2013,3
+Crown  (UMAC),,30035,2022,2013,3
+North Central  (CCIW),,492,2022,2013,3
+Wilmington  (OAC),,1461,2022,2013,3
+McDaniel,,773,2022,2013,3
+Otterbein,,531,2022,2013,3
+Allegheny,,19,2022,2013,3
+Wm. Paterson,,787,2022,2013,3
+Earlham,,195,2022,2013,3
+Pomona-Pitzer,,549,2022,2013,3
+Fontbonne,,11538,2022,2013,3
+Redlands,,567,2022,2013,3
+Denison,,182,2022,2013,3
+Chapman,,134,2022,2013,3
+CMSV,,451,2022,2013,3
+Webster,,759,2022,2013,3
+SUNY Cortland,,168,2022,2013,3
+Texas-Dallas,,23121,2022,2013,3
+Centenary  (SCAC),,125,2022,2013,3
+Methodist,,412,2022,2013,3
+Trinity  (SCAC),,715,2022,2013,3
+DePauw,,177,2022,2013,3
+Lawrence,,348,2022,2013,3
+Rowan,,259,2022,2013,3
+Huntingdon,,1130,2022,2013,3
+Ill. Wesleyan,,300,2022,2013,3
+Tufts,,717,2022,2013,3
+Adrian,,4,2022,2013,3
+Roanoke,,578,2022,2013,3
+Ithaca,,313,2022,2013,3
+Rhodes,,573,2022,2013,3
+Shenandoah,,637,2022,2013,3
+Salve Regina,,623,2022,2013,3
+Wooster,,807,2022,2013,3
+Penn St.-Behrend,,538,2022,2013,3
+William Peace,,17094,2022,2013,3
+Wash. & Jeff.,,751,2022,2013,3
+Merchant Marine,,724,2022,2013,3
+Brandeis,,73,2022,2013,3
+Rochester  (Liberty League),,581,2022,2013,3
+Suffolk,,684,2022,2013,3
+Kean,,329,2022,2013,3
+Stevens,,679,2022,2013,3
+Moravian,,443,2022,2013,3
+Arcadia,,966,2022,2013,3
+Wis.-Platteville,,800,2022,2013,3
+Wis.-Whitewater,,805,2022,2013,3
+Lebanon Valley,,351,2022,2013,3
+Plattsburgh St.,,547,2022,2013,3
+Oswego St.,,530,2022,2013,3
+Utica,,733,2022,2013,3
+Keystone,,30047,2022,2013,3
+Springfield,,673,2022,2013,3
+Northwestern-St. Paul,,30031,2022,2013,3
+Scranton,,633,2022,2013,3
+Buena Vista,,84,2022,2013,3
+East. Mennonite,,203,2022,2013,3
+Claremont-M-S,,142,2022,2013,3
+Maryville  (USA South),,396,2022,2013,3
+Washington Col.,,753,2022,2013,3
+Pfeiffer,,542,2022,2013,3
+Penn St.-Altoona,,25719,2022,2013,3
+Skidmore,,642,2022,2013,3
+Wash. & Lee,,752,2022,2013,3
+Immaculata,,303,2022,2013,3
+Union  (Liberty League),,727,2022,2013,3
+DeSales,,20,2022,2013,3
+SUNY Brockport,,78,2022,2013,3
+Concordia-M'head,,161,2022,2013,3
+Old Westbury,,524,2022,2013,3
+Endicott,,8981,2022,2013,3
+Grinnell,,264,2022,2013,3
+Wittenberg,,806,2022,2013,3
+Lynchburg,,374,2022,2013,3
+N.C. Wesleyan,,491,2022,2013,3
+Gettysburg,,258,2022,2013,3
+Franklin,,2694,2022,2013,3
+Calvin,,114,2022,2013,3
+Colby,,151,2022,2013,3
+Loras,,364,2022,2013,3
+UChicago,,137,2022,2013,3
+Wis.-La Crosse,,795,2022,2013,3
+Spalding,,23260,2022,2013,3
+Elmhurst,,212,2022,2013,3
+Franklin & Marshall,,239,2022,2013,3
+Westfield St.,,777,2022,2013,3
+Hope,,286,2022,2013,3
+Wilkes,,784,2022,2013,3
+Hamilton,,267,2022,2013,3
+Stockton,,681,2022,2013,3
+Gwynedd Mercy,,12399,2022,2013,3
+Swarthmore,,686,2022,2013,3
+Wabash,,747,2022,2013,3
+Lehman,,279,2022,2013,3
+Sul Ross St.,,1390,2022,2013,3
+Misericordia,,16142,2022,2013,3
+Marymount  (Atlantic East),,394,2022,2013,3
+Mary Hardin-Baylor,,1203,2022,2013,3
+Grove City,,265,2022,2013,3
+UMass Boston,,401,2022,2013,3
+Penn St.-Berks,,30044,2022,2013,3
+East Tex. Baptist,,1062,2022,2013,3
+Centenary  (Atlantic East),,12884,2022,2013,3
+Anderson  (HCAC),,939,2022,2013,3
+Wis.-Stevens Point,,802,2022,2013,3
+Thiel,,707,2022,2013,3
+Vassar,,737,2022,2013,3
+Westminster  (C),,1451,2022,2013,3
+Penn St. Harrisburg,,30081,2022,2013,3
+Rose-Hulman,,585,2022,2013,3
+New England Col.,,467,2022,2013,3
+Bridgewater St.,,76,2022,2013,3
+Schreiner,,1355,2022,2013,3
+Kenyon,,335,2022,2013,3
+Ohio Northern,,517,2022,2013,3
+Salisbury,,622,2022,2013,3
+Catholic,,124,2022,2013,3
+John Carroll,,320,2022,2013,3
+Austin,,953,2022,2013,3
+Mary Washington,,390,2022,2013,3
+Wheaton  (NEWC),,779,2022,2013,3
+St. Mary's  (United East),,611,2022,2013,3
+McMurry,,8530,2022,2013,3
+York  (MAC Commonwealth),,815,2022,2013,3
+Penn College,,30190,2022,2013,3
+Hardin-Simmons,,271,2022,2013,3
+New Jersey City,,319,2022,2013,3
+Roger Williams,,583,2022,2013,3
+Millsaps,,426,2022,2013,3
+Guilford,,1112,2022,2013,3
+Cabrini,,88,2022,2013,3
+Mass. Maritime,,399,2022,2013,3
+Carthage,,121,2022,2013,3
+Eureka,,218,2022,2013,3
+Mitchell,,30042,2022,2013,3
+NYU,,479,2022,2013,3
+Emory,,217,2022,2013,3
+Manhattanville,,382,2022,2013,3
+Keuka,,1159,2022,2013,3
+Johns Hopkins,,322,2022,2013,3
+Wis.-Oshkosh,,798,2022,2013,3
+Covenant,,30111,2022,2013,3
+Delaware Valley,,179,2022,2013,3
+Bridgewater  (ODAC),,75,2022,2013,3
+Texas Lutheran,,1400,2022,2013,3
+Mt. St. Joseph,,8567,2022,2013,3
+Rutgers-Newark,,589,2022,2013,3
+MSOE,,20220,2022,2013,3
+Wesleyan  (NESCAC),,764,2022,2013,3
+Ripon,,577,2022,2013,3
+St. John Fisher,,601,2022,2013,3
+Farmingdale St.,,27892,2022,2013,3
+Olivet,,525,2022,2013,3
+Wheaton  (CCIW),,778,2022,2013,3
+Wartburg,,750,2022,2013,3
+Benedictine  (NACC),,296,2022,2013,3
+Puget Sound,,557,2022,2013,3
+Brevard,,30094,2022,2013,3
+Mount Aloysius,,30036,2022,2013,3
+Pacific Lutheran,,1297,2022,2013,3
+Lancaster Bible,,30085,2022,2013,3
+Saint Vincent,,30064,2022,2013,3
+Gallaudet,,245,2022,2013,3
+Central  (American Rivers),,126,2022,2013,3
+Trinity  (NESCAC),,713,2022,2013,3
+Pacific  (NWC),,2751,2022,2013,3
+Augustana  (CCIW),,40,2022,2013,3
+Wis.-Stout,,803,2022,2013,3
+Ozarks  (ASC),,23008,2022,2013,3
+Howard Payne,,2741,2022,2013,3
+Millikin,,424,2022,2013,3
+Dubuque,,192,2022,2013,3
+WashU,,755,2022,2013,3
+Babson,,45,2022,2013,3
+St. Joseph's  (Great Northeast),,605,2022,2013,3
+Lewis & Clark,,22235,2022,2013,3
+Hendrix,,1124,2022,2013,3
+Rensselaer,,570,2022,2013,3
+Carleton,,118,2022,2013,3
+Nichols,,484,2022,2013,3
+Hanover,,1115,2022,2013,3
+Elizabethtown,,211,2022,2013,3
+Haverford,,276,2022,2013,3
+Concordia Wisconsin,,1036,2022,2013,3
+Muskingum,,455,2022,2013,3
+Mount Union,,452,2022,2013,3
+Western New Eng.,,775,2022,2013,3
+Luther,,372,2022,2013,3
+JWU  (Great Northeast),,22626,2022,2013,3
+Franciscan,,30069,2022,2013,3
+Clarkson,,146,2022,2013,3
+Westminster  (SLIAC),,1450,2022,2013,3
+Transylvania,,28749,2022,2013,3
+Husson,,1133,2022,2013,3
+Dominican  (NACC),,1332,2022,2013,3
+Va. Wesleyan,,745,2022,2013,3
+Muhlenberg,,453,2022,2013,3
+Messiah,,411,2022,2013,3
+St. Norbert,,614,2022,2013,3
+King's  (MAC Freedom),,336,2022,2013,3
+Monmouth  (MWC),,438,2022,2013,3
+Greensboro,,263,2022,2013,3
+Pitt.-Greensburg,,11839,2022,2013,3
+Saint John's  (MIAC),,602,2022,2013,3
+Macalester,,376,2022,2013,3
+TCNJ,,712,2022,2013,3
+Willamette,,785,2022,2013,3
+Thomas  (North Atlantic),,2758,2022,2013,3
+Norwich,,511,2022,2013,3
+Emerson,,214,2022,2013,3
+North Park,,496,2022,2013,3
+Southwestern  (SCAC),,8746,2022,2013,3
+Alvernia,,938,2022,2013,3
+St. Joseph's  (Skyline),,30072,2022,2013,3
+Oberlin,,515,2022,2013,3
+Edgewood,,1066,2022,2013,3
+Geneva,,30084,2022,2013,3
+Illinois Col.,,297,2022,2013,3
+Cal Lutheran,,105,2022,2013,3
+Wentworth,,762,2022,2013,3
+Trine,,30037,2022,2013,3
+Bard,,962,2022,2013,3
+Oglethorpe,,2713,2022,2013,3
+Alfred St.,,30170,2022,2013,3
+Fredonia,,242,2022,2013,3
+Rockford,,582,2022,2013,3
+Whitman,,780,2022,2013,3
+Cobleskill St.,,30083,2022,2013,3
+Bethany Lutheran,,30038,2022,2013,3
+SUNY Maritime,,478,2022,2013,3
+Neb. Wesleyan,,462,2022,2013,3
+St. Lawrence,,607,2022,2013,3
+Cairn,,1305,2022,2013,3
+Chris. Newport,,139,2022,2013,3
+Lakeland,,1164,2022,2013,3
+Wis.-Superior,,804,2022,2013,3
+Bowdoin,,69,2022,2013,3
+Amherst,,24,2022,2013,3
+Worcester St.,,809,2022,2013,3
+Hilbert,,8398,2022,2013,3
+Houghton,,30160,2022,2013,3
+Eastern,,8968,2022,2013,3
+Me.-Farmington,,379,2022,2013,3
+IIT,,30172,2022,2013,3
+Centre,,132,2022,2013,3
+Capital,,117,2022,2013,3
+SUNY New Paltz,,475,2022,2013,3
+Hampden-Sydney,,269,2022,2013,3
+Beloit,,53,2022,2013,3
+MIT,,398,2022,2013,3
+Southern Va.,,30164,2022,2013,3
+Salem St.,,621,2022,2013,3
+Lesley,,24317,2022,2013,3
+Bluffton,,987,2022,2013,3
+FDU-Florham,,221,2022,2013,3
+Eastern Nazarene,,1064,2022,2013,3
+Neumann,,1254,2022,2013,3
+WPI,,808,2022,2013,3
+Dean,,30219,2022,2013,3
+Rosemont,,15882,2022,2013,3
+Pitt.-Bradford,,1315,2022,2013,3
+Marian  (NACC),,1196,2022,2013,3
+Simpson,,641,2022,2013,3
+Marywood,,397,2022,2013,3
+Piedmont,,21830,2022,2013,3
+UMass Dartmouth,,656,2022,2013,3
+Williams,,789,2022,2013,3
+Juniata,,325,2022,2013,3
+Averett,,44,2022,2013,3
+Linfield,,1179,2022,2013,3
+Ramapo,,564,2022,2013,3
+RIT,,580,2022,2013,3
+Elmira,,213,2022,2013,3
+Concordia Chicago,,160,2022,2013,3
+Bates,,50,2022,2013,3
+St. Thomas  (SCAC),,2810,2022,2013,3
+Cazenovia,,23624,2022,2013,3
+Ohio Wesleyan,,520,2022,2013,3
+Minn.-Morris,,1226,2022,2013,3
+Mt. St. Mary  (Skyline),,1468,2022,2013,3
+Valley Forge,,30166,2022,2013,3
+Plymouth St.,,548,2022,2013,3
+Bob Jones,,30232,2022,2013,3
+CWRU,,122,2022,2013,3
+Baruch,,58,2022,2013,3
+Augsburg,,38,2022,2013,3
+Southern Me.,,662,2022,2013,3
+Ferrum,,225,2022,2013,3
+Heidelberg,,278,2022,2013,3
+Wis. Lutheran,,8911,2022,2013,3
+St. Scholastica,,618,2022,2013,3
+Mary Baldwin,,389,2022,2013,3
+Elms,,532,2022,2013,3
+CCNY,,480,2022,2013,3
+Fitchburg St.,,227,2022,2013,3
+Rutgers-Camden,,588,2022,2013,3
+Dickinson,,185,2022,2013,3
+Framingham St.,,238,2022,2013,3
+Wis.-Eau Claire,,793,2022,2013,3
+Gordon,,1099,2022,2013,3
+La Roche,,1163,2022,2013,3
+Chatham,,10972,2022,2013,3
+Stevenson,,21852,2022,2013,3
+Blackburn,,64,2022,2013,3
+Belhaven,,30197,2022,2013,3
+Alma,,21,2022,2013,3
+MCLA,,486,2022,2013,3
+Colby-Sawyer,,152,2022,2013,3
+Susquehanna,,685,2022,2013,3
+Greenville,,1111,2022,2013,3
+Lasell,,8486,2022,2013,3
+Manchester,,1192,2022,2013,3
+Coast Guard,,722,2022,2013,3
+Cornell College,,166,2022,2013,3
+North Central  (UMAC),,30039,2022,2013,3
+Carroll  (CCIW),,120,2022,2013,3
+SUNY Oneonta,,526,2022,2013,3
+Saint Mary's  (MIAC),,612,2022,2013,3
+Ursinus,,730,2022,2013,3
+Clark  (NEWC),,145,2022,2013,3
+Purchase,,30029,2022,2013,3
+Albertus Magnus,,2798,2022,2013,3
+SUNY Poly,,9500,2022,2013,3
+Russell Sage,,11036,2022,2013,3
+SUNY Canton,,30165,2022,2013,3
+Northland,,1267,2022,2013,3
+Concordia  (ASC),,24400,2022,2013,3
+Occidental,,516,2022,2013,3
+Bethany  (PAC),,59,2022,2013,3
+Waynesburg,,1434,2022,2013,3
+Me.-Presque Isle,,30040,2022,2013,3
+George Fox,,1094,2022,2013,3
+St. Olaf,,615,2022,2013,3
+Whittier,,781,2022,2013,3
+Drew,,190,2022,2013,3
+NVU-Lyndon,,30065,2022,2013,3
+Defiance,,1050,2022,2013,3
+Hiram,,281,2022,2013,3
+Hamline,,268,2022,2013,3
+Caltech,,89,2022,2013,3
+Dallas,,1044,2022,2013,3
+Western Conn. St.,,770,2022,2013,3
+Knox,,337,2022,2013,3
+MUW,,431,2022,2013,3
+Hood,,8404,2022,2013,3
+Martin Luther,,8597,2022,2013,3
+Sewanee,,652,2022,2013,3
+Wells,,761,2022,2013,3
+LeTourneau,,8490,2022,2013,3
+Albion,,15,2022,2013,3
+Castleton,,123,2022,2013,3
+Berea,,30171,2022,2013,3
+Whitworth,,1454,2022,2013,3
+Clarks Summit,,958,2022,2013,3
+Curry,,170,2022,2013,3
+John Jay,,321,2022,2013,3
+Medaille,,23725,2022,2013,3
+Coe,,150,2022,2013,3
+Maranatha Baptist,,1194,2022,2013,3
+Yeshiva,,814,2022,2013,3
+Keene St.,,330,2022,2013,3
+Rivier,,18422,2022,2013,3
+Finlandia,,30032,2022,2013,3
+Principia,,555,2022,2013,3
+Albright,,16,2022,2013,3
