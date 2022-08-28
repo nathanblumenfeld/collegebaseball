@@ -206,7 +206,9 @@ def generate_player_game_logs():
         (2347219, 2022, 'batting'),  # Sam Kaplan, Cornell
         (2471763, 2022, 'batting'),  # Ivan Melendez, Texas
         (2486499, 2022, 'fielding'),  # Jake Gelof, Virginia
-        (2306475, 2022, 'pitching')  # Nate Savino, Virginia
+        (2306475, 2022, 'pitching'),  # Nate Savino, Virginia
+        (1997693, 2018, 'pitching'),
+        (1997693, 2019, 'pitching')
     ]
     generated_data = []
     for i in players:
