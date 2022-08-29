@@ -247,20 +247,26 @@ def ncaa_player_game_logs(player, season, variant, school=None):
     soup = BeautifulSoup(r.text, features='lxml')
     table = soup.find_all('table')[3]
     rows = []
+    rows = []
+    prev_game_id = 0
     for val in table.find_all(_has_no_id)[3:]:
-        data = []
+        row = []
         for i in val.children:
             if isinstance(i, Tag):
                 if i.a:
-                    if 'box_score' in i.a.get('href'):
-                        score = i.a.string.strip()
-                        score = score.replace('W', '')
-                        score = score.replace('L', '')
-                        score = score.replace('T', '')
-                    opponent_info = i.find_all('a')[-1].get('href')
-                    if '?' in opponent_info:
-                        game_id = opponent_info.split('?')[0].split('/')[-1]
+                    if len(i.find_all('a')) == 1:
+                        if 'box_score' in i.a.get('href'):
+                            score = i.a.string.strip()
+                            score = score.replace('W', '')
+                            score = score.replace('L', '')
+                            score = score.replace('T', '')
+                            game_id = i.a.get('href').split('/')[-2]
+                        else:
+                            opponent_id = '-'
+                            opponent = '-'
+                            field = 'neutral'
                     else:
+                        opponent_info = i.find_all('a')[-1].get('href')
                         if opponent_info.split('/')[1] == 'teams':
                             opponent_id = opponent_info.split('/')[-1]
                         elif opponent_info.split('/')[-1] == 'box_score':
@@ -279,9 +285,10 @@ def ncaa_player_game_logs(player, season, variant, school=None):
                             else:
                                 field = 'home'
                 elif 'data-order' in i.attrs:
-                    data.append(i.get('data-order'))
+                    row.append(i.get('data-order'))
                 else:
-                    date = i.string
+                    if '/' in i.string:
+                        date = i.string
         if '(' in score:
             innings_played = score.split(
                 '(')[-1].split(')')[0].strip()
@@ -300,26 +307,28 @@ def ncaa_player_game_logs(player, season, variant, school=None):
             result = 'loss'
         else:
             result = 'tie'
-        data.append(date)
-        data.append(field)
-        data.append(season_id)
-        data.append(opponent_id)
-        data.append(opponent)
-        data.append(innings_played)
-        data.append(extras)
-        data.append(runs_scored)
-        data.append(runs_allowed)
-        data.append(run_difference)
-        data.append(result)
-        data.append(score)
-        data.append(game_id)
-        data.append(school_id)
-        if len(data) == (len(headers)-1):
-            data.append(int(player_id))
-            rows.append(data)
+        row.append(date)
+        row.append(field)
+        row.append(season_id)
+        row.append(opponent_id)
+        row.append(opponent)
+        row.append(innings_played)
+        row.append(extras)
+        row.append(runs_scored)
+        row.append(runs_allowed)
+        row.append(run_difference)
+        row.append(result)
+        row.append(score)
+        row.append(game_id)
+        row.append(school_id)
+        if len(row) == (len(headers)-1) and prev_game_id != game_id:
+            row.append(int(player_id))
+            rows.append(row)
     res = pd.DataFrame(rows, columns=headers)
-    res = res.loc[res.field.isin(['away', 'home', 'neutral'])]
-    res = _transform_team_stats(res)
+    if not res.empty:
+        res.loc[:, 'season'] = season
+        res = res.loc[res.field.isin(['away', 'home', 'neutral'])]
+        res = _transform_team_stats(res)
     return res
 
 
@@ -397,7 +406,8 @@ def ncaa_team_game_logs(school, season, variant):
                 elif 'data-order' in i.attrs:
                     row.append(i.get('data-order'))
                 else:
-                    date = i.string
+                    if '/' in i.string:
+                        date = i.string
         if '(' in score:
             innings_played = score.split(
                 '(')[-1].split(')')[0].strip()
@@ -435,6 +445,7 @@ def ncaa_team_game_logs(school, season, variant):
             rows.append(row)
     res = pd.DataFrame(rows, columns=headers)
     if not res.empty:
+        res.loc[:, 'season'] = season
         res = res.loc[res.field.isin(['away', 'home', 'neutral'])]
         res = _transform_team_stats(res)
     return res
