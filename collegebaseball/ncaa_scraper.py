@@ -95,7 +95,7 @@ def ncaa_team_stats(school, season, variant, include_advanced=True,
         return pd.DataFrame()
     df.columns = headers
     df['season'] = season
-    res = _transform_team_stats(df)
+    res = _transform_stats(df)
     if variant == 'batting':
         if include_advanced:
             if len(res) > 0:
@@ -177,7 +177,7 @@ def ncaa_team_totals(school, season, variant, include_advanced=True,
         rows.append(row)
     df = pd.DataFrame(rows, columns=headers)
     df['season'] = season
-    res = _transform_team_stats(df)
+    res = _transform_stats(df)
     cols_to_drop = ['Jersey', 'Yr', 'pos', 'GP', 'GS', 'App']
     for i in cols_to_drop:
         if i in res.columns:
@@ -247,7 +247,6 @@ def ncaa_player_game_logs(player, season, variant, school=None):
     soup = BeautifulSoup(r.text, features='lxml')
     table = soup.find_all('table')[3]
     rows = []
-    rows = []
     prev_game_id = 0
     for val in table.find_all(_has_no_id)[3:]:
         row = []
@@ -257,68 +256,31 @@ def ncaa_player_game_logs(player, season, variant, school=None):
                     if len(i.find_all('a')) == 1:
                         if 'box_score' in i.a.get('href'):
                             score = i.a.string.strip()
-                            score = score.replace('W', '')
-                            score = score.replace('L', '')
-                            score = score.replace('T', '')
                             game_id = i.a.get('href').split('/')[-2]
-                        else:
-                            opponent_id = '-'
-                            opponent = '-'
-                            field = 'neutral'
-                    else:
-                        opponent_info = i.find_all('a')[-1].get('href')
-                        if opponent_info.split('/')[1] == 'teams':
-                            opponent_id = opponent_info.split('/')[-1]
-                        elif opponent_info.split('/')[-1] == 'box_score':
-                            game_id = opponent_info.split('/')[-2]
-                        else:
-                            opponent_id = opponent_info.split('/')[-2]
-                        if 'target' not in i.find_all('a')[-1].attrs:
-                            opponent = i.find_all('a')[-1].contents[0]
-                            opponent = opponent.string.replace('</br>', '')
-                            opponent = opponent.strip()
-                            if opponent[0] == '@':
-                                field = 'away'
-                                opponent = opponent.split('@')[-1].strip()
-                            elif '@' in opponent:
-                                field = 'neutral'
-                            else:
-                                field = 'home'
+                        elif 'team' in i.a.get('href'):
+                            opponent_id = i.a.get('href').split('/')[2]
+                            opponent_name, field = _parse_opponent_info(
+                                i.a.text.strip())
                 elif 'data-order' in i.attrs:
                     row.append(i.get('data-order'))
+                elif '/' in i.string:
+                    date = i.string
                 else:
-                    if '/' in i.string:
-                        date = i.string
-        if '(' in score:
-            innings_played = score.split(
-                '(')[-1].split(')')[0].strip()
-            extras = 'True'
-            score = score.split('(')[0].strip()
-        else:
-            innings_played = '9'
-            extras = 'False'
-        scores = score.split('-')
-        runs_scored = int(scores[0].strip())
-        runs_allowed = int(scores[-1].strip())
-        run_difference = runs_scored - runs_allowed
-        if run_difference > 0:
-            result = 'win'
-        elif run_difference < 0:
-            result = 'loss'
-        else:
-            result = 'tie'
+                    opponent_name, field = _parse_opponent_info(i.text.strip())
+                    opponent_id = '-'
+        runs_scored, runs_allowed, run_diff, result, ip, extras = _parse_score(
+            score)
         row.append(date)
         row.append(field)
         row.append(season_id)
         row.append(opponent_id)
-        row.append(opponent)
-        row.append(innings_played)
+        row.append(opponent_name)
+        row.append(ip)
         row.append(extras)
         row.append(runs_scored)
         row.append(runs_allowed)
-        row.append(run_difference)
+        row.append(run_diff)
         row.append(result)
-        row.append(score)
         row.append(game_id)
         row.append(school_id)
         if len(row) == (len(headers)-1) and prev_game_id != game_id:
@@ -327,8 +289,7 @@ def ncaa_player_game_logs(player, season, variant, school=None):
     res = pd.DataFrame(rows, columns=headers)
     if not res.empty:
         res.loc[:, 'season'] = season
-        res = res.loc[res.field.isin(['away', 'home', 'neutral'])]
-        res = _transform_team_stats(res)
+        res = _transform_stats(res)
     return res
 
 
@@ -370,74 +331,36 @@ def ncaa_team_game_logs(school, season, variant):
     for val in table.find_all(_has_no_id)[3:]:
         row = []
         for i in val.children:
-            print(i)
             if isinstance(i, Tag):
                 if i.a:
                     if len(i.find_all('a')) == 1:
                         if 'box_score' in i.a.get('href'):
                             score = i.a.string.strip()
-                            score = score.replace('W', '')
-                            score = score.replace('L', '')
-                            score = score.replace('T', '')
                             game_id = i.a.get('href').split('/')[-2]
-                        else:
-                            opponent_id = '-'
-                            opponent = '-'
-                            field = 'neutral'
-                    else:
-                        opponent_info = i.find_all('a')[-1].get('href')
-                        if opponent_info.split('/')[1] == 'teams':
-                            opponent_id = opponent_info.split('/')[-1]
-                        elif opponent_info.split('/')[-1] == 'box_score':
-                            game_id = opponent_info.split('/')[-2]
-                        else:
-                            opponent_id = opponent_info.split('/')[-2]
-                        if 'target' not in i.find_all('a')[-1].attrs:
-                            opponent = i.find_all('a')[-1].contents[0]
-                            opponent = opponent.string.replace('</br>', '')
-                            opponent = opponent.strip()
-                            if opponent[0] == '@':
-                                field = 'away'
-                                opponent = opponent.split('@')[-1].strip()
-                            elif '@' in opponent:
-                                field = 'neutral'
-                            else:
-                                field = 'home'
+                        elif 'team' in i.a.get('href'):
+                            opponent_id = i.a.get('href').split('/')[2]
+                            opponent_name, field = _parse_opponent_info(
+                                i.a.text.strip())
                 elif 'data-order' in i.attrs:
                     row.append(i.get('data-order'))
+                elif '/' in i.string:
+                    date = i.string
                 else:
-                    if '/' in i.string:
-                        date = i.string
-        if '(' in score:
-            innings_played = score.split(
-                '(')[-1].split(')')[0].strip()
-            extras = 'True'
-            score = score.split('(')[0].strip()
-        else:
-            innings_played = '9'
-            extras = 'False'
-        scores = score.split('-')
-        runs_scored = int(scores[0].strip())
-        runs_allowed = int(scores[-1].strip())
-        run_difference = runs_scored - runs_allowed
-        if run_difference > 0:
-            result = 'win'
-        elif run_difference < 0:
-            result = 'loss'
-        else:
-            result = 'tie'
+                    opponent_name, field = _parse_opponent_info(i.text.strip())
+                    opponent_id = '-'
+        runs_scored, runs_allowed, run_diff, result, ip, extras = _parse_score(
+            score)
         row.append(date)
         row.append(field)
         row.append(season_id)
         row.append(opponent_id)
-        row.append(opponent)
-        row.append(innings_played)
+        row.append(opponent_name)
+        row.append(ip)
         row.append(extras)
         row.append(runs_scored)
         row.append(runs_allowed)
-        row.append(run_difference)
+        row.append(run_diff)
         row.append(result)
-        row.append(score)
         row.append(game_id)
         row.append(school_id)
         if (len(row) == len(headers)) and (game_id != prev_game_id):
@@ -446,8 +369,7 @@ def ncaa_team_game_logs(school, season, variant):
     res = pd.DataFrame(rows, columns=headers)
     if not res.empty:
         res.loc[:, 'season'] = season
-        res = res.loc[res.field.isin(['away', 'home', 'neutral'])]
-        res = _transform_team_stats(res)
+        res = _transform_stats(res)
     return res
 
 
@@ -606,7 +528,6 @@ def ncaa_career_stats(stats_player_seq, variant):
         rows = []
         row = []
         for val in table.find_all('td'):
-            # data is also encoded in data-order attr of td elements
             if 'data-order' in val.attrs:
                 row.append(val['data-order'])
             elif val.a is not None:
@@ -621,7 +542,7 @@ def ncaa_career_stats(stats_player_seq, variant):
                     row.append(val.string.strip())
         df = pd.DataFrame(rows)
         df.columns = headers
-        df = _transform_team_stats(df)
+        df = _transform_stats(df)
         return df
     except:
         print('no records found')
@@ -847,7 +768,7 @@ def _eliminate_dashes(df):
     return df
 
 
-def _transform_team_stats(df):
+def _transform_stats(df):
     """
     A helper function to transform raw data obtained with get_career_stats
     Args:
@@ -929,6 +850,49 @@ def _has_no_id(tag):
     return tag.name == 'tr' and not tag.has_attr('id')
 
 
+def _parse_score(score):
+    score = score.replace('W', '')
+    score = score.replace('L', '')
+    score = score.replace('T', '')
+    if '(' in score:
+        ip = score.split(
+            '(')[-1].split(')')[0].strip()
+        if int(ip) > 9:
+            extras = 'True'
+        else:
+            extras = 'False'
+        score = score.split('(')[0].strip()
+    else:
+        ip = '9'
+        extras = 'False'
+    scores = score.split('-')
+    scored = int(scores[0].strip())
+    allowed = int(scores[-1].strip())
+    difference = scored - allowed
+    if difference > 0:
+        result = 'win'
+    elif difference < 0:
+        result = 'loss'
+    else:
+        result = 'tie'
+    return scored, allowed, difference, result, ip, extras
+
+
+def _parse_opponent_info(opponent_info):
+    if opponent_info[0] == '@':
+        field = 'away'
+        opponent_name = opponent_info.split(
+            '@')[-1].strip()
+    elif '@' in opponent_info:
+        field = 'neutral'
+        opponent_name = opponent_info.split(
+            '@')[0].strip()
+    else:
+        field = 'home'
+        opponent_name = opponent_info
+    return opponent_name, field
+
+
 def _lookup_log_headers(season, variant):
     """
     handling season/season_id input types for game log functions
@@ -944,49 +908,49 @@ def _lookup_log_headers(season, variant):
                    'GDP', 'RBI2out', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played',
                    'extras', 'runs_scored', 'runs_allowed',
-                   'run_difference', 'result', 'score', 'game_id',
+                   'run_difference', 'result',  'game_id',
                    'school_id'],
             2021: ['G', 'R', 'AB', 'H', '2B', '3B',
                    'TB', 'HR', 'RBI', 'BB', 'HBP', 'SF', 'SH', 'K', 'OPP DP',
                    'CS', 'Picked', 'SB', 'IBB', 'RBI2out', 'date', 'field'
                    'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored', 'runs_allowed',
-                   'run_difference', 'result', 'score', 'game_id',
+                   'run_difference', 'result',  'game_id',
                    'school_id'],
             2020: ['G', 'R', 'AB', 'H', '2B', '3B',
                    'TB', 'HR', 'RBI', 'BB', 'HBP', 'SF', 'SH', 'K', 'OPP DP',
                    'CS', 'Picked', 'SB', 'IBB', 'RBI2out', 'date', 'field',
                    'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored',
-                   'runs_allowed', 'run_difference', 'result', 'score',
+                   'runs_allowed', 'run_difference', 'result',
                    'game_id', 'school_id'],
             2019: ['G', 'R', 'AB', 'H', '2B', '3B',
                    'TB', 'HR', 'RBI', 'BB', 'HBP', 'SF', 'SH', 'K', 'DP',
                    'CS', 'Picked', 'SB', 'IBB', 'RBI2out', 'date', 'field',
                    'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored',
-                   'runs_allowed', 'run_difference', 'result', 'score',
+                   'runs_allowed', 'run_difference', 'result',
                    'game_id', 'school_id'],
             2018: ['G', 'R', 'AB', 'H', '2B', '3B',
                    'TB', 'HR', 'RBI', 'BB', 'HBP', 'SF', 'SH', 'K', 'DP',
                    'CS', 'Picked', 'SB', 'IBB', 'RBI2out', 'date', 'field',
                    'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored',
-                   'runs_allowed', 'run_difference', 'result', 'score',
+                   'runs_allowed', 'run_difference', 'result',
                    'game_id', 'school_id'],
             2017: ['G', 'R', 'AB', 'H', '2B', '3B',
                    'TB', 'HR', 'RBI', 'BB', 'HBP', 'SF', 'SH', 'K', 'DP',
                    'CS', 'Picked', 'SB', 'IBB', 'RBI2out', 'date', 'field',
                    'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored',
-                   'runs_allowed', 'run_difference', 'result', 'score',
+                   'runs_allowed', 'run_difference', 'result',
                    'game_id', 'school_id'],
             2016: ['G', 'R', 'AB', 'H', '2B', '3B',
                    'TB', 'HR', 'RBI', 'BB', 'HBP', 'SF', 'SH', 'K', 'DP',
                    'CS', 'Picked', 'SB', 'RBI2out', 'IBB', 'date', 'field',
                    'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored',
-                   'runs_allowed', 'run_difference', 'result', 'score',
+                   'runs_allowed', 'run_difference', 'result',
                    'game_id', 'school_id'],
             2015: ['G', 'R', 'AB', 'H', '2B',
                    '3B', 'TB', 'HR', 'RBI', 'BB', 'HBP', 'SF', 'SH', 'K',
@@ -994,25 +958,25 @@ def _lookup_log_headers(season, variant):
                    'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored',
                    'runs_allowed', 'run_difference', 'result',
-                   'score', 'game_id', 'school_id'],
+                   'game_id', 'school_id'],
             2014: ['G', 'AB', 'R', 'H', '2B', '3B',
                    'TB', 'HR', 'RBI', 'BB', 'HBP', 'SF', 'SH', 'K', 'DP', 'SB',
                    'CS', 'Picked', 'IBB', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played',
                    'extras', 'runs_scored', 'runs_allowed', 'run_difference',
-                   'result', 'score', 'game_id', 'school_id'],
+                   'result',  'game_id', 'school_id'],
             2013: ['AB', 'H', 'TB', 'R', '2B', '3B',
                    'HR', 'RBI', 'BB', 'HBP', 'SF', 'SH', 'K', 'DP', 'SB',
                    'CS', 'Picked', 'IBB', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played',
                    'extras', 'runs_scored', 'runs_allowed', 'run_difference',
-                   'result', 'score', 'game_id', 'school_id'],
+                   'result',  'game_id', 'school_id'],
             2012: ['AB', 'R', 'H', '2B', '3B', 'HR',
                    'RBI', 'BB', 'HBP', 'SF', 'SH', 'K', 'DP', 'SB', 'CS',
                    'Picked', 'IBB', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played',
                    'extras', 'runs_scored', 'runs_allowed', 'run_difference',
-                   'result', 'score', 'game_id', 'school_id']}
+                   'result',  'game_id', 'school_id']}
         headers = batting_headers_dict[season]
     elif variant == 'pitching':
         pitching_headers_dict = {
@@ -1023,7 +987,7 @@ def _lookup_log_headers(season, variant):
                    'L', 'SV', 'OrdAppeared', 'KL', 'pickoffs', 'date',
                    'field', 'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored', 'runs_allowed',
-                   'run_difference', 'result', 'score', 'game_id',
+                   'run_difference', 'result',  'game_id',
                    'school_id'],
             2021: ['App', 'G', 'GS', 'IP', 'CG', 'H', 'R', 'ER', 'BB', 'SO',
                    'SHO', 'BF', 'P-OAB', '2B-A', '3B-A', 'Bk', 'HR-A', 'WP',
@@ -1032,7 +996,7 @@ def _lookup_log_headers(season, variant):
                    'KL', 'pickoffs', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played', 'extras',
                    'runs_scored', 'runs_allowed', 'run_difference', 'result',
-                   'score', 'game_id', 'school_id'],
+                   'game_id', 'school_id'],
             2020: ['App', 'G', 'GS', 'IP', 'CG', 'H', 'R', 'ER', 'BB', 'SO',
                    'SHO', 'BF', 'P-OAB', '2B-A', '3B-A', 'Bk', 'HR-A', 'WP',
                    'HB', 'IBB', 'Inh Run', 'Inh Run Score', 'SHA', 'SFA',
@@ -1040,7 +1004,7 @@ def _lookup_log_headers(season, variant):
                    'KL', 'pickoffs', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played',
                    'extras', 'runs_scored', 'runs_allowed', 'run_difference',
-                   'result', 'score', 'game_id', 'school_id'],
+                   'result',  'game_id', 'school_id'],
             2019: ['App', 'G', 'GS', 'IP', 'CG', 'H',
                    'R', 'ER', 'BB', 'SO', 'SHO', 'BF', 'P-OAB', '2B-A', '3B-A',
                    'Bk', 'HR-A', 'WP', 'HB', 'IBB', 'Inh Run', 'Inh Run Score',
@@ -1048,7 +1012,7 @@ def _lookup_log_headers(season, variant):
                    'OrdAppeared', 'KL', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played', 'extras',
                    'runs_scored', 'runs_allowed', 'run_difference', 'result',
-                   'score', 'game_id', 'school_id'],
+                   'game_id', 'school_id'],
             2018: ['App', 'G', 'GS', 'IP', 'CG', 'H',
                    'R', 'ER', 'BB', 'SO', 'SHO', 'BF', 'P-OAB', '2B-A', '3B-A',
                    'Bk', 'HR-A', 'WP', 'HB', 'IBB', 'Inh Run', 'Inh Run Score',
@@ -1056,7 +1020,7 @@ def _lookup_log_headers(season, variant):
                    'OrdAppeared', 'KL', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played', 'extras',
                    'runs_scored', 'runs_allowed', 'run_difference', 'result',
-                   'score', 'game_id', 'school_id'],
+                   'game_id', 'school_id'],
             2017: ['App', 'G', 'GS', 'IP', 'CG', 'H',
                    'R', 'ER', 'BB', 'SO', 'SHO', 'BF', 'P-OAB', '2B-A', '3B-A',
                    'Bk', 'HR-A', 'WP', 'HB', 'IBB', 'Inh Run', 'Inh Run Score',
@@ -1064,7 +1028,7 @@ def _lookup_log_headers(season, variant):
                    'OrdAppeared', 'KL', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played',
                    'extras', 'runs_scored', 'runs_allowed', 'run_difference',
-                   'result', 'score', 'game_id', 'school_id'],
+                   'result',  'game_id', 'school_id'],
             2016: ['App', 'G', 'GS', 'IP', 'CG', 'H',
                    'R', 'ER', 'BB', 'SO', 'SHO', 'BF', 'P-OAB', '2B-A', '3B-A',
                    'Bk', 'HR-A', 'WP', 'HB', 'IBB', 'Inh Run', 'Inh Run Score',
@@ -1072,7 +1036,7 @@ def _lookup_log_headers(season, variant):
                    'OrdAppeared', 'KL', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played', 'extras',
                    'runs_scored', 'runs_allowed', 'run_difference', 'result',
-                   'score', 'game_id', 'school_id'],
+                   'game_id', 'school_id'],
             2015: ['App', 'G', 'GS', 'IP', 'H', 'R',
                    'ER', 'BB', 'SO', 'SHO', 'BF', 'P-OAB', '2B-A', '3B-A',
                    'Bk', 'HR-A', 'WP', 'HB', 'IBB', 'Inh Run', 'Inh Run Score',
@@ -1080,7 +1044,7 @@ def _lookup_log_headers(season, variant):
                    'OrdAppeared', 'KL', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played', 'extras',
                    'runs_scored', 'runs_allowed', 'run_difference', 'result',
-                   'score', 'game_id', 'school_id'],
+                   'game_id', 'school_id'],
             2014: ['App', 'GS', 'IP', 'H', 'R', 'ER',
                    'BB', 'SO', 'SHO', 'BF', 'P-OAB', '2B-A', '3B-A', 'Bk',
                    'HR-A', 'WP', 'HB', 'IBB', 'Inh Run', 'Inh Run Score',
@@ -1088,7 +1052,7 @@ def _lookup_log_headers(season, variant):
                    'OrdAppeared', 'KL', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played',
                    'extras', 'runs_scored', 'runs_allowed',
-                   'run_difference', 'result', 'score', 'game_id',
+                   'run_difference', 'result',  'game_id',
                    'school_id'],
             2013: ['App', 'GS', 'IP', 'H',
                    'R', 'ER', 'BB', 'SO', 'SHO', 'BF', 'P-OAB', '2B-A',
@@ -1097,7 +1061,7 @@ def _lookup_log_headers(season, variant):
                    'L', 'SV', 'OrdAppeared', 'KL', 'date', 'field',
                    'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored', 'runs_allowed',
-                   'run_difference', 'result', 'score', 'game_id',
+                   'run_difference', 'result',  'game_id',
                    'school_id'],
             2012: ['App', 'GS', 'IP', 'H', 'R', 'ER',
                    'BB', 'SO', 'SHO', 'BF', 'P-OAB', '2B-A', '3B-A', 'Bk',
@@ -1106,7 +1070,7 @@ def _lookup_log_headers(season, variant):
                    'OrdAppeared', 'KL', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played'
                    'extras', 'runs_scored', 'runs_allowed',
-                   'run_difference', 'result', 'score', 'game_id',
+                   'run_difference', 'result',  'game_id',
                    'school_id'],
         }
         headers = pitching_headers_dict[season]
@@ -1115,63 +1079,63 @@ def _lookup_log_headers(season, variant):
             2022: ['G', 'PO', 'A', 'TC', 'E', 'CI', 'PB', 'SBA', 'CSB', 'IDP',
                    'TP', 'date', 'field', 'season_id', 'opponent_id',
                    'opponent_name', 'innings_played', 'extras', 'runs_scored',
-                   'runs_allowed', 'run_difference', 'result', 'score',
+                   'runs_allowed', 'run_difference', 'result',
                    'game_id', 'school_id'],
             2021: ['G', 'PO', 'A', 'TC', 'E', 'CI',
                    'PB', 'SBA', 'CSB', 'IDP', 'TP', 'date', 'field',
                    'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored',
-                   'runs_allowed', 'run_difference', 'result', 'score',
+                   'runs_allowed', 'run_difference', 'result',
                    'game_id', 'school_id'],
             2020: ['G', 'PO', 'A', 'TC', 'E', 'CI',
                    'PB', 'SBA', 'CSB', 'IDP', 'TP', 'date', 'field',
                    'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored',
-                   'runs_allowed', 'run_difference', 'result', 'score',
+                   'runs_allowed', 'run_difference', 'result',
                    'game_id', 'school_id'],
             2019: ['G', 'PO', 'A', 'TC', 'E', 'CI',
                    'PB', 'SBA', 'CSB', 'IDP', 'TP', 'date', 'field',
                    'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored',
-                   'runs_allowed', 'run_difference', 'result', 'score',
+                   'runs_allowed', 'run_difference', 'result',
                    'game_id', 'school_id'],
             2018: ['G', 'PO', 'TC', 'A', 'E', 'CI',
                    'PB', 'SBA', 'CSB', 'IDP', 'TP', 'date', 'field',
                    'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored',
-                   'runs_allowed', 'run_difference', 'result', 'score',
+                   'runs_allowed', 'run_difference', 'result',
                    'game_id', 'school_id'],
             2017: ['G', 'G', 'PO', 'TC', 'A', 'E',
                    'CI', 'PB', 'SBA', 'CSB', 'IDP', 'TP', 'date', 'field',
                    'season_id', 'opponent_id', 'opponent_name',
                    'innings_played', 'extras', 'runs_scored',
-                   'runs_allowed', 'run_difference', 'result', 'score',
+                   'runs_allowed', 'run_difference', 'result',
                    'game_id', 'school_id'],
             2016: ['G', 'PO', 'A', 'E', 'CI', 'PB',
                    'SBA', 'CSB', 'IDP', 'TP', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played',
                    'extras', 'runs_scored', 'runs_allowed', 'run_difference',
-                   'result', 'score', 'game_id', 'school_id'],
+                   'result',  'game_id', 'school_id'],
             2015: ['G', 'PO', 'A', 'E', 'CI', 'PB',
                    'SBA', 'CSB', 'IDP', 'TP', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played', 'extras',
                    'runs_scored', 'runs_allowed', 'run_difference', 'result',
-                   'score', 'game_id', 'school_id'],
+                   'game_id', 'school_id'],
             2014: ['G', 'PO', 'A', 'E', 'CI', 'PB',
                    'SBA', 'CSB', 'IDP', 'TP', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played', 'extras',
                    'runs_scored', 'runs_allowed', 'run_difference', 'result',
-                   'score', 'game_id', 'school_id'],
+                   'game_id', 'school_id'],
             2013: ['PO', 'A', 'E', 'CI', 'PB', 'SBA',
                    'CSB', 'IDP', 'TP', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played', 'extras',
                    'runs_scored', 'runs_allowed', 'run_difference', 'result',
-                   'score', 'game_id', 'school_id'],
+                   'game_id', 'school_id'],
             2012: ['PO', 'A', 'E', 'CI', 'PB', 'SBA',
                    'CSB', 'IDP', 'TP', 'date', 'field', 'season_id',
                    'opponent_id', 'opponent_name', 'innings_played', 'extras',
                    'runs_scored', 'runs_allowed', 'run_difference', 'result',
-                   'score', 'game_id', 'school_id']}
+                   'game_id', 'school_id']}
         headers = fielding_headers_dict[season]
     return headers
 

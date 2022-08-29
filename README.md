@@ -17,11 +17,10 @@
 pip install git+https://github.com/nathanblumenfeld/collegebaseball
 ``` 
 ## Planned Feature Additions
-
+- [ ] Splits for game logs
 - [ ] Team Schedules
 - [ ] Play-by-Play Data
 - [ ] Linear Weight Calculation Tools
-- [ ] SIERA
 - [ ] Park Factor Calculation Tools
 - [ ] WRC+
 
