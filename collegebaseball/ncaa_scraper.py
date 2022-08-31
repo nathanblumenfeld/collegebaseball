@@ -228,8 +228,7 @@ def ncaa_player_game_logs(player, season, variant, school=None):
         else:
             return 'must give a player_id if no school given'
     stats_player_seq = str(player_id)
-    headers = ncaa_utils.gamelog_headers[variant][season]
-    headers.append('stats_player_seq')
+    headers = ncaa_utils.player_gamelog_headers[variant][season]
     if variant == 'batting':
         year_stat_category_id = batting_id
     elif variant == 'pitching':
@@ -303,6 +302,7 @@ def ncaa_player_game_logs(player, season, variant, school=None):
             row.append(int(player_id))
             rows.append(row)
     res = pd.DataFrame(rows, columns=headers)
+    print(res)
     if not res.empty:
         res.loc[:, 'season'] = season
         res = res.loc[res.field.isin(['away', 'home', 'neutral'])]
@@ -327,7 +327,7 @@ def ncaa_team_game_logs(school, season, variant):
     season, season_id, batting_id, pitching_id, fielding_id = lookup._lookup_season_info(
         season)
     school, school_id = lookup._lookup_school_info(school)
-    headers = ncaa_utils.gamelog_headers[variant][season]
+    headers = ncaa_utils.team_gamelog_headers[variant][season]
     if variant == 'batting':
         year_stat_category_id = batting_id
     elif variant == 'pitching':
