@@ -44,9 +44,7 @@ def calculate_pythagenpat_win_pct(games):
         Developed by David Smyth and Patriot
 
     Args:
-        games (DataFrame): games over which to calculate
-        start (int, YYYY): season to start at, inclusive
-        end (int, YYYY): season to end at, inclusive
+        games (pd.DataFrame from boydsworld_team_results())
 
     Returns:
         A tuple of (the expected winning percentage as a float,

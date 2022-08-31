@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="collegebaseball",
-    version="1.2.0-alpha",
+    version="1.2.2-alpha",
     url="https://github.com/nathanblumenfeld/collegebaseball",
     author="Nathan Blumenfeld",
     author_email="nathanblumenfeld@gmail.com",
@@ -10,7 +10,7 @@ setuptools.setup(
     long_description=open('DESCRIPTION.rst').read(),
     packages=setuptools.find_packages(),
     install_requires=["pandas", "numpy",
-                      "requests", "lxml", "bs4", "importlib"],
+                      "requests", "lxml", "bs4", "importlib", "tqdm"],
     keywords=["baseball", "ncaa", "ncaa_baseball",
               "college_baseball", "college_sports"],
     classifiers=[

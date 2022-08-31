@@ -1,0 +1,89 @@
+Lookup Functions
+================
+
+
+Player
+------
+.. py:function:: lookup.lookup_player(player_name, school):
+
+    A function to find a player's id from their name and school
+
+    :player_name (str): name of player to lookup
+    :school: the name of the player's school (str) or school_id (int)
+
+    :Returns (int): player_id
+    :Examples:
+        lookup_player("Jake Gelof", "Virginia")
+        >>> 2486499
+
+.. py:function:: lookup.lookup_player_reverse(player_id):
+
+    A function to find a player's name and school from their player_id 
+
+    :player_id (str): name of player to lookup
+    :season (int): YYYY
+
+    :Returns (tuple): of player_name (str), school_name (str), school_id (int)
+
+
+.. py:function:: lookup_seasons_played(stats_player_seq):
+    
+    A function to find the final and debut seasons of a given player
+
+    :stats_player_seq (int): NCAA player_id
+
+    :Returns (tuple(int)): of debut season, most recent season
+
+School
+------
+.. py:function:: lookup.lookup_school(school_name):
+    
+    A function to find a school's id from it's name
+    
+    :school (str): the name of the school
+
+    :Returns (int): school_id 
+
+    :Examples:
+        lookup_school("cornell")
+        >>> 167
+
+.. py:function:: lookup.lookup_school_reverse(school_id):
+
+    A function to find a school's name from a school_id
+
+    :school_id (int): 
+        
+    :Returns (str): the name of the school
+        
+    :Examples:
+        lookup_school_reverse(167)
+        >>> "Cornell"
+
+Season
+------
+.. py:function:: lookup_season_id(season):
+
+    A function that finds the year_stat_category_ids for a given season
+
+    :season (int): YYYY
+
+    :Returns (int): season_id 
+
+.. py:function:: lookup.lookup_season_ids(season):
+
+    A function that finds the year_stat_category_ids of a given season
+
+    :season (int): YYYY
+
+    :Returns:
+        tuple of season_id, batting_id, pitching_id
+
+
+.. py:function:: lookup_season_reverse(season_id):
+
+    A function that finds the year_stat_category_ids and season of a season_id
+
+    :season_id (int): NCAA season_id
+
+    :Returns (tuple): of season_id, batting_id, pitching_id 

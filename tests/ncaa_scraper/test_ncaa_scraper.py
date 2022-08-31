@@ -1,85 +1,10 @@
 from collegebaseball import ncaa_scraper as ncaa
-from collegebaseball import datasets
-import pandas as pd
+from collegebaseball import guts
 import pytest
 from time import sleep
 import random
 
 _TIMEOUT = 1
-
-
-@ pytest.fixture()
-def generate_lookup_school_id():
-    df = pd.read_parquet(datasets.get_school_path())
-    teams = df.sample(5)['ncaa_name'].unique()
-    # teams = ['Cornell', 'Texas', 'Lincoln Memorial']
-    res = []
-    for team in teams:
-        res.append(
-            ncaa.lookup_school_id(team))
-    return res
-
-
-@ pytest.fixture()
-def generate_lookup_season_id():
-    seasons = [x for x in range(2013, 2023)]
-    res = []
-    for season in seasons:
-        res.append(
-            ncaa.lookup_season_id(season))
-    return res
-
-
-@ pytest.fixture()
-def generate_lookup_season_ids():
-    seasons = [x for x in range(2013, 2023)]
-    res = []
-    for season in seasons:
-        res.append(
-            ncaa.lookup_season_ids(season))
-    return res
-
-
-@ pytest.fixture()
-def generate_lookup_season_reverse():
-    season_ids = [15860, 10942, 11620, 12080]
-    res = []
-    for season_id in season_ids:
-        res.append(
-            ncaa.lookup_season_reverse(season_id))
-    return res
-
-
-@ pytest.fixture()
-def generate_lookup_seasons_played():
-    df = pd.read_csv(datasets.get_players_history_path())
-    players = df.sample(5)['stats_player_seq'].unique()
-    res = []
-    for player in players:
-        res.append(
-            ncaa.lookup_seasons_played(player))
-    return res
-
-
-@ pytest.fixture()
-def generate_lookup_school_info():
-    df = pd.read_parquet(datasets.get_school_path())
-    teams = df.sample(5)['school_id'].unique()
-    # teams = [167, 746, 'Albright', 'Cornell']
-    res = []
-    for team in teams:
-        res.append(
-            ncaa.lookup_school_info(int(team)))
-    return res
-
-
-@ pytest.fixture()
-def generate_lookup_season_info():
-    seasons = [x for x in range(2013, 2023)]
-    res = []
-    for season in seasons:
-        res.append(ncaa.lookup_season_info(season))
-    return res
 
 
 @ pytest.fixture()
@@ -102,7 +27,7 @@ def generate_career_stats():
 
 @ pytest.fixture()
 def generate_team_totals():
-    df = pd.read_parquet(datasets.get_school_path())
+    df = guts.get_schools_table()
     teams = df.sample(5)['school_id'].unique()
     # teams = [167, 641, 9081, 973]  # 1257
     seasons = [x for x in range(2013, 2022)]
@@ -121,7 +46,7 @@ def generate_team_totals():
 
 @ pytest.fixture()
 def generate_team_roster():
-    df = pd.read_parquet(datasets.get_school_path())
+    df = guts.get_schools_table()
     teams = df.sample(5)['school_id'].unique()
     seasons = [x for x in range(2013, 2015)]
     generated_data = []
@@ -150,7 +75,7 @@ def generate_team_season_roster():
 
 @ pytest.fixture()
 def generate_team_stats():
-    df = pd.read_parquet(datasets.get_school_path())
+    df = guts.get_schools_table()
     teams = df.sample(5)['school_id'].unique()
     seasons = [x for x in range(2013, 2023)]
     splits = [None, 'vs_LH', 'vs_RH', 'two_outs', 'bases_loaded']
@@ -170,7 +95,7 @@ def generate_team_stats():
 
 @ pytest.fixture()
 def generate_team_game_logs():
-    df = pd.read_parquet(datasets.get_school_path())
+    df = guts.get_schools_table()
     teams = df.sample(5)['school_id'].unique()
     # teams = [167, 1257, 641]
     seasons = [x for x in range(2013, 2023)]
@@ -255,39 +180,4 @@ def test_player_game_logs(generate_player_game_logs):
 
 def test_team_season_roster(generate_team_season_roster):
     for i in generate_team_season_roster:
-        assert i is not None
-
-
-def test_lookup_season_reverse(generate_lookup_season_reverse):
-    for i in generate_lookup_season_reverse:
-        assert i is not None
-
-
-def test_lookup_season_info(generate_lookup_season_info):
-    for i in generate_lookup_season_info:
-        assert i is not None
-
-
-def test_lookup_school_id(generate_lookup_school_id):
-    for i in generate_lookup_school_id:
-        assert i is not None
-
-
-def test_lookup_season_id(generate_lookup_season_id):
-    for i in generate_lookup_season_id:
-        assert i is not None
-
-
-def test_lookup_season_ids(generate_lookup_season_ids):
-    for i in generate_lookup_season_ids:
-        assert i is not None
-
-
-def test_lookup_seasons_played(generate_lookup_seasons_played):
-    for i in generate_lookup_seasons_played:
-        assert i is not None
-
-
-def test_lookup_school_info(generate_lookup_school_info):
-    for i in generate_lookup_school_info:
         assert i is not None
