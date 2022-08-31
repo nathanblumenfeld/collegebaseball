@@ -302,7 +302,6 @@ def ncaa_player_game_logs(player, season, variant, school=None):
             row.append(int(player_id))
             rows.append(row)
     res = pd.DataFrame(rows, columns=headers)
-    print(res)
     if not res.empty:
         res.loc[:, 'season'] = season
         res = res.loc[res.field.isin(['away', 'home', 'neutral'])]
