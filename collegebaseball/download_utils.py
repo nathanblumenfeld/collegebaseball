@@ -153,10 +153,10 @@ def download_player_game_logs(season, division=None, save=True):
                       ' | '+str(season)+' | '+str(variant))
                 continue
     if save:
-        batting_res.to_csv('collegebaseball/data/batting_player_game_logs_' +
+        batting_res.to_csv('collegebaseball/data/d'+str(division)+'_batting_player_game_logs_' +
                            str(season)+'.csv', index=False)
-        pitching_res.to_csv('collegebaseball/data/pitching_player_game_logs_' +
+        pitching_res.to_csv('collegebaseball/data/d'+str(division)+'_pitching_player_game_logs_' +
                             str(season)+'.csv', index=False)
-        fielding_res.to_csv('collegebaseball/data/fielding_player_game_logs_' +
+        fielding_res.to_csv('collegebaseball/data/d'+str(division)+'_fielding_player_game_logs_' +
                             str(season)+'.csv', index=False)
     return batting_res, pitching_res, fielding_res
