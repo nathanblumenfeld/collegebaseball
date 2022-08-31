@@ -24,4 +24,3 @@ Team-level Game Logs
    :season: season as (int, YYYY) or NCAA season_id (list), 2013-2022
    :variant (str): 'batting', 'pitching', or 'fielding'
    :returns (pd.DataFrame):
-
