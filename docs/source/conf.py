@@ -9,7 +9,7 @@
 project = 'collegebaseball'
 copyright = '2022, Nathan Blumenfeld'
 author = 'Nathan Blumenfeld'
-release = '1.2.2-alpha'
+release = '1.2.2'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
