@@ -6,55 +6,12 @@ produced with ncaa_scraper module
 
 created by Nathan Blumenfeld in Spring 2022
 """
-from collegebaseball import datasets
-import pandas as pd
+from collegebaseball import guts
 import numpy as np
 
 
 # number of decimal places to round floats to
 ROUND_TO = 3
-
-
-def load_linear_weights():
-    """
-    Returns:
-        Dataframe with the following columns:
-            wOBA: lgwOBA (calculated from totals)
-            wOBAScale
-            wBB
-            wHB
-            w1B
-            w2B
-            w3B
-            wHR
-            R/PA
-            RPG
-            cFIP
-            season (primary key)
-
-    Linear Weights provided by Robert Fray
-    n.b. 2022 Season calculated as avg. of previous 5 seasons
-    """
-    res = pd.read_parquet(datasets.get_linear_weights_path())
-    return res
-
-
-def load_season_linear_weights(season):
-    """
-    Args:
-        season (int, YYYY): valid 2013-2022
-
-    Returns:
-        Single-row Dataframe with the following columns:
-            season (primary key)
-            season_id
-            batting_id
-            pitching_id
-            fielding_id
-    """
-    df = load_linear_weights()
-    res = df.loc[df['season'] == int(season)]
-    return res
 
 
 def _calculate_pa(row):
@@ -75,7 +32,7 @@ def _calculate_woba(row):
     """
     """
     if row['PA'] > 0:
-        season_weights = load_season_linear_weights(row['season'])
+        season_weights = guts.get_season_linear_weights(row['season'])
         numerator = (season_weights['wBB'].values[0] * row['BB']
                      + season_weights['wHBP'].values[0] * row['HBP']
                      + season_weights['w1B'].values[0] * row['1B']
@@ -107,7 +64,7 @@ def calculate_woba_manual(plate_appearances, walks, hits_by_pitch, singles,
         wOBA as a float
     """
     if plate_appearances > 0:
-        season_weights = load_season_linear_weights(season)
+        season_weights = guts.get_season_linear_weights(season)
         numerator = (season_weights['wBB'].values[0] * walks
                      + season_weights['wHBP'].values[0] * hits_by_pitch
                      + season_weights['w1B'].values[0] * singles
@@ -124,7 +81,7 @@ def _calculate_wraa(row):
     """
     """
     if row['PA'] > 0:
-        season_weights = load_season_linear_weights(row['season'])
+        season_weights = guts.get_season_linear_weights(row['season'])
         return round(((row['wOBA'] - season_weights['wOBA'].values[0])
                      / season_weights['wOBAScale'].values[0])
                      * row['PA'], ROUND_TO)
@@ -146,7 +103,7 @@ def calculate_wraa_manual(plate_appearances, woba,  season):
         The weighted runs created above average of a player as a float
     """
     if plate_appearances > 0:
-        season_weights = load_season_linear_weights(season)
+        season_weights = guts.get_season_linear_weights(season)
         return round(((woba - season_weights['wOBA'].values[0])
                      / season_weights['wOBAScale'].values[0])
                      * plate_appearances, ROUND_TO)
@@ -165,7 +122,7 @@ def _calculate_wrc(row):
         wRC = [((wOBA - lgwOBA) / wOBAScale) + (lgR / PA))] * PA
     """
     if row['PA'] > 0:
-        season_weights = load_season_linear_weights(row['season'])
+        season_weights = guts.get_season_linear_weights(row['season'])
         return round((((row['wOBA'] - season_weights['wOBA'].values[0])
                        / season_weights['wOBAScale'].values[0])
                       + season_weights['R/PA'].values[0])
@@ -188,7 +145,7 @@ def calculate_wrc_manual(plate_appearances, woba, season):
         The weighted runs created by a player as a float
     """
     if plate_appearances > 0:
-        season_weights = load_season_linear_weights(season)
+        season_weights = guts.get_season_linear_weights(season)
         return round((((woba - season_weights['wOBA'].values[0])
                        / season_weights['wOBAScale'].values[0])
                       + season_weights['R/PA'].values[0])
@@ -215,7 +172,7 @@ def add_batting_metrics(df):
     df.loc[:, '1B'] = (df['H'] - df['2B'] - df['3B'] - df['HR'])
     df.loc[:, 'OBP'] = round((df['H'] + df['BB'] + df['IBB'] + df['HBP'])
                              / df['PA'], ROUND_TO)
-    df.loc[:, 'BA'] = round(df['H'].divide(
+    df.loc[:, 'BA'] = round(df['H'] / (
         df['AB']).replace(np.inf, 0), ROUND_TO)
     df.loc[:, 'SLG'] = round((1 * df['1B'] + 2 * df['2B'] + 3 * df['3B']
                              + 4 * df['HR']) / df['AB'], ROUND_TO)
@@ -224,7 +181,7 @@ def add_batting_metrics(df):
     df.loc[:, 'HR/PA'] = round(df['HR'] / df['PA'], ROUND_TO)
     df.loc[:, 'K/PA'] = round(df['K'] / df['PA'], ROUND_TO)
     df.loc[:, 'BB/PA'] = round(df['BB'] / df['PA'], ROUND_TO)
-    df.loc[:, 'K/BB'] = round((df['K'].divide(df['BB'])
+    df.loc[:, 'K/BB'] = round((df['K'] / (df['BB'])
                                ).replace(np.inf, 0.0), ROUND_TO)
     df.loc[:, 'BABIP'] = round((df['H'] - df['HR'])
                                / (df['AB'] - df['K'] - df['HR']
@@ -248,7 +205,7 @@ def _calculate_fip(row):
     """
     """
     if row['IP-adj'] > 0:
-        season_weights = load_season_linear_weights(row['season'])
+        season_weights = guts.get_season_linear_weights(row['season'])
         res = round(((13 * row['HR-A'] + 3 * (row['BB'] + row['HB']) - 2 *
                     row['SO']) / row['IP-adj'])
                     + season_weights['cFIP'].values[0], 3)
@@ -257,7 +214,7 @@ def _calculate_fip(row):
         return 0.00
 
 
-def calculate_fip_manual(HR, BB, HB, K, IP, season):
+def calculate_fip_manual(homeruns, walks, hit_batters, strikeouts, innings_pitched, season):
     """
     Calculates FIP bases on the following formula:
         ((HR x 13) + (3 x(BB + HBP)) - (2 x K)) / IP + cFIP
@@ -273,8 +230,8 @@ def calculate_fip_manual(HR, BB, HB, K, IP, season):
     Returns:
         FIP as a float
     """
-    season_weights = load_season_linear_weights(season)
-    return round(((13 * HR + 3 * (BB + HB) - 2 * K) / IP)
+    season_weights = guts.get_season_linear_weights(season)
+    return round(((13 * homeruns + 3 * (walks + hit_batters) - 2 * strikeouts) / innings_pitched)
                  + season_weights['cFIP'].values[0], ROUND_TO)
 
 
@@ -326,10 +283,10 @@ def add_pitching_metrics(df):
     df.loc[:, 'Pitches/IP'] = round(
         (df['pitches'] / (df['IP-adj'])).replace(np.inf, 0), ROUND_TO)
     if 'App' in df.columns:
-        df.loc[:, 'IP/App'] = round((df['IP-adj'].divide(df['App'])
+        df.loc[:, 'IP/App'] = round((df['IP-adj'] / (df['App'])
                                      ).replace(np.inf, 0), ROUND_TO)
         df.loc[:, 'Pitches/App'] = round(
-            (df['pitches'].divide(df['App'])).replace(np.inf, 0), ROUND_TO)
+            (df['pitches'] / (df['App'])).replace(np.inf, 0), ROUND_TO)
         if len(df.loc[df['Pitches/App'] > 0]) < 1:
             df = df.drop(columns=['Pitches/App'], inplace=False)
     df.loc[:, 'Pitches/PA'] = round((df['pitches'] / (df['BF'])

@@ -17,7 +17,7 @@ def boydsworld_team_results(school, start, end=None, vs="all",
     Valid 1992 to 2021, d1 only
 
     Args:
-        team_1 (str): team whose games to select
+        school (str): team whose games to select
         start (int): the start year of games
         end (int):  the end season of games
         vs (str): school to filter games against. default: 'all'
