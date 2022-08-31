@@ -375,7 +375,6 @@ def ncaa_team_game_logs(school, season, variant):
                     score = '-'
                     game_id = '-'
                 else:
-                    print('here!')
                     opponent_name, field = ncaa_utils._parse_opponent_info(
                         i.text.strip())
                     opponent_id = '-'
@@ -561,7 +560,6 @@ def ncaa_career_stats(stats_player_seq, variant):
         rows = []
         row = []
         for val in table.find_all('td'):
-            # data is also encoded in data-order attr of td elements
             if 'data-order' in val.attrs:
                 row.append(val['data-order'])
             elif val.a is not None:
