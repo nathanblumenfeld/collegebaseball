@@ -93,12 +93,12 @@ def download_team_results(season: int):
 def download_team_stats(seasons: list[int], variant: str, divisions: list[int], save=True):
     """
     """
-    res = pd.DataFrame()
     failures = []
     df = guts.get_schools_table()
     for division in tqdm(divisions):
         schools = df.loc[df.division == division]
         for season in tqdm(seasons):
+            res = pd.DataFrame()
             for i in tqdm(schools.school_id.unique()):
                 sleep(random.uniform(0, _TIMEOUT))
                 try:
@@ -113,6 +113,7 @@ def download_team_stats(seasons: list[int], variant: str, divisions: list[int], 
             res['season'] = res['season'].astype('int32')
             res['division'] = division
             res['division'] = res['division'].astype('int8')
+            print(res)
             if save:
                 res.to_csv('collegebaseball/data/d'+str(division)+'_'+str(season) +
                            '_'+variant+'_stats.csv', index=False)
@@ -160,3 +161,16 @@ def download_player_game_logs(season, division=None, save=True):
         fielding_res.to_csv('collegebaseball/data/d'+str(division)+'_fielding_player_game_logs_' +
                             str(season)+'.csv', index=False)
     return batting_res, pitching_res, fielding_res
+
+
+# def download_team_game_logs(seasons: list[int], division, variant):
+#     schools = guts.get_schools_table()
+#     schools = schools.loc[schools.division == division]
+#     res = pd.DataFrame()
+#     for i in schools.school_id.unique():
+#         for season in seasons:
+#             try:
+#                 new = ncaa.ncaa_team_game_logs(i,
+#                                                season, variant)
+
+#             except:
