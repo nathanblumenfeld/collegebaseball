@@ -21,10 +21,3 @@ including an intuitive API for *stats.ncaa.org*
    :caption: Contents:
 
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
