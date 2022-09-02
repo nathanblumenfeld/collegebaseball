@@ -1,3 +1,4 @@
+============
 Game Results
 ============
 
@@ -18,11 +19,19 @@ Team Results
    Valid 1992 to 2021, d1 only
 
    :school (str): team whose games to select
+<<<<<<< Updated upstream
    :start (int): the start year of games
    :end (int):  the end season of games
    :vs (str): school to filter games against. default: 'all'
    :parse_dates (bool): whether to parse data into datetime64
    :returns (pd.DataFrame): of all games played for a given team inclusive of start & end
+=======
+   :start (int): the start year of games, 1992 <= x <= 2022
+   :end (int, optional):  the end season of games, 1992 <= x <= 2022
+   :vs (str, optional): school to filter games against. default: 'all'
+   :parse_dates (bool, optional): whether to parse data into datetime64
+   :return (pd.DataFrame): of all games played for a given team inclusive of start & end
+>>>>>>> Stashed changes
 
 .. py:function:: win_pct.calculate_actual_win_pct(games):
 

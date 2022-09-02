@@ -116,7 +116,7 @@ def download_team_stats(seasons: list[int], variant: str, divisions: list[int], 
             if save:
                 res.to_csv('collegebaseball/data/d'+str(division)+'_'+str(season) +
                            '_'+variant+'_stats.csv', index=False)
-    return res, failures
+    return res
 
 
 def download_player_game_logs(season, division=None, save=True):

@@ -1,3 +1,4 @@
 include DESCRIPTION.rst
 include *.parquet
+include *.csv
 recursive-include collegebaseball/data *
