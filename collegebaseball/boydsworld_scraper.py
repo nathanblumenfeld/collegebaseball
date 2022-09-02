@@ -3,7 +3,7 @@ boydsworld_scraper
 
 A scraper module for boydsworld.com historical game results
 
-Created by Nathan Blumenfeld in November 2021
+created by Nathan Blumenfeld in November 2021
 """
 import pandas as pd
 import requests

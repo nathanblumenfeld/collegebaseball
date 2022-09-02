@@ -1,3 +1,10 @@
+"""
+guts.py
+
+A module to provide convenient read-access to collegebaseball's internal data
+
+created by Nathan Blumenfeld in Summer 2022
+"""
 from importlib import resources
 import pandas as pd
 
@@ -89,7 +96,7 @@ def get_linear_weights_path():
 
     """
     with resources.path("collegebaseball.data",
-                        "d1_linear_weights.parquet") as f:
+                        "linear_weights.csv") as f:
         data_file_path = f
     return data_file_path
 
@@ -97,10 +104,10 @@ def get_linear_weights_path():
 def get_linear_weights_table():
     """
     """
-    return pd.read_parquet(get_linear_weights_path())
+    return pd.read_csv(get_linear_weights_path())
 
 
-def get_season_linear_weights(season: int):
+def get_season_linear_weights(season: int, division):
     """
     Args:
         season(int, YYYY): valid 2013-2022
@@ -114,5 +121,6 @@ def get_season_linear_weights(season: int):
             fielding_id
     """
     df = get_linear_weights_table()
-    res = df.loc[df['season'] == int(season)]
+    df = df.loc[df['season'] == int(season)]
+    res = df.loc[df['division'] == int(division)]
     return res
