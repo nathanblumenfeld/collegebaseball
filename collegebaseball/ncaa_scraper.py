@@ -21,8 +21,8 @@ _TIMEOUT = 4
 def ncaa_team_stats(school, season, variant, include_advanced=True,
                     split=None):
     """
-    Obtains player-level aggregate single-season batting/pitching stats totals
-    for all players from a given school
+    Obtains player-level single-season aggregate stats
+     for all players from a given school, from stats.ncaa.org
 
     Args:
         school: schools (str) or NCAA school_id (int)
@@ -35,8 +35,6 @@ def ncaa_team_stats(school, season, variant, include_advanced=True,
 
     Returns:
        pd.DataFrame
-
-    data from stats.ncaa.org. valid 2013-2022
     """
     season, season_id, batting_id, pitching_id, fielding_id = lookup._lookup_season_info(
         season)
@@ -102,8 +100,9 @@ def ncaa_team_stats(school, season, variant, include_advanced=True,
                 res = metrics.add_batting_metrics(res)
                 res = res.loc[res.PA > 0]
     elif variant == 'pitching':
-        if 'App' in res.columns:
-            res = res.loc[res.App > 0]
+        if split is None:
+            if 'App' in res.columns:
+                res = res.loc[res.App > 0]
         if include_advanced:
             if len(res) > 0:
                 res = metrics.add_pitching_metrics(res)
@@ -112,16 +111,17 @@ def ncaa_team_stats(school, season, variant, include_advanced=True,
 
 def ncaa_career_stats(stats_player_seq, variant, include_advanced=True):
     """
-    Transmits GET request to stats.ncaa.org, parses career stats
+    Obtains season-aggregate stats for all seasons in a given player's
+     collegiate career, from stats.ncaa.org 
 
     Args:
         stats_player_seq (int): the NCAA player_id
         variant (str): 'batting', 'pitching', or 'fielding'
+        include_advanced (bool, optional). Whether to
+         automatically calcuate advanced metrics, Defaults to True
 
     Returns:
         pd.DataFrame
-
-    data from stats.ncaa.org. valid 2013-2022
     """
     season = lookup.lookup_seasons_played(stats_player_seq)[0]
     season, season_id, batting_id, pitching_id, fielding_id = lookup._lookup_season_info(
@@ -184,8 +184,8 @@ def ncaa_career_stats(stats_player_seq, variant, include_advanced=True):
 def ncaa_team_totals(school, season, variant, include_advanced=True,
                      split=None):
     """
-    Obtains team-level aggregate single-season batting/pitching stats
-    totals for all teams
+    Obtains team-level aggregate single-season stats for a given team, 
+     from stats.ncaa.org
 
     Args:
         school: schools (str) or NCAA school_id (int)
@@ -198,8 +198,6 @@ def ncaa_team_totals(school, season, variant, include_advanced=True,
 
     Returns:
         pd.DataFrame
-
-    data from stats.ncaa.org. valid 2013-2022
     """
     school, school_id, division = lookup._lookup_school_info(school)
     season, season_id, batting_id, pitching_id, fielding_id = lookup._lookup_season_info(
@@ -268,7 +266,8 @@ def ncaa_team_totals(school, season, variant, include_advanced=True,
 
 def ncaa_player_game_logs(player, season, variant, school=None, include_advanced=True):
     """
-    Obtains aggregate player-level game-by-game stats
+    Obtains player-level game-by-game stats for a given player in 
+     a given season, from stats.ncaa.org
 
     Args:
         player: player name (str) or NCAA stats_player_seq (int)
@@ -279,8 +278,6 @@ def ncaa_player_game_logs(player, season, variant, school=None, include_advanced
 
     Returns:
         pd.DataFrame
-
-    data from stats.ncaa.org. valid 2013-2022
     """
     season, season_id, batting_id, pitching_id, fielding_id = lookup._lookup_season_info(
         season)
@@ -395,17 +392,18 @@ def ncaa_player_game_logs(player, season, variant, school=None, include_advanced
 
 def ncaa_team_game_logs(school, season, variant, include_advanced=True):
     """
-    Obtains aggregate team-level game-by-game stats
+    Obtains team-level game-by-game stats for a given team in a given 
+     season, from stats.ncaa.org
 
     Args:
         school: school name (str) or NCAA school_id (int)
         seasons: seasons as (int, YYYY) or NCAA season_id (list), 2013-2022
         variant (str): 'batting', 'pitching', or 'fielding'
+        include_advanced (bool, optional). Whether to
+         automatically calcuate advanced metrics, Defaults to True
 
     Returns:
         pd.DataFrame
-
-    data from stats.ncaa.org. valid 2013-2022
     """
     season, season_id, batting_id, pitching_id, fielding_id = lookup._lookup_season_info(
         season)
@@ -500,16 +498,15 @@ def ncaa_team_game_logs(school, season, variant, include_advanced=True):
 
 def ncaa_team_results(school, season):
     """
-    Obtains the results of completed games for a given school/season
+    Obtains the results of games for a given school in a given 
+     season, from stats.ncaa.org
 
-    Retrieves data of completed games for a given team from stats.ncaa.org
     Args:
         school: school name (str) or NCAA school_id (int)
         season: season (int, YYYY) or NCAA season_id (int), valid 2013-2022
+
     Returns:
         pd.DataFrame
-
-    data from stats.ncaa.org. valid 2013-2022
     """
     data = ncaa_team_game_logs(
         school, season, variant='batting', include_advanced=False)
@@ -521,7 +518,8 @@ def ncaa_team_results(school, season):
 
 def ncaa_team_season_roster(school, season):
     """
-    Retrieves the single-season roster for a given school/season
+    Retrieves the single-season roster for a given school in a 
+     given season, from stats.ncaa.org
 
     Args:
         school: school name (str) or NCAA school_id (int)
@@ -529,8 +527,6 @@ def ncaa_team_season_roster(school, season):
 
     Returns:
         pd.DataFrame
-
-    data from stats.ncaa.org, valid for 2013-2022.
     """
     school, school_id, division = lookup._lookup_school_info(school)
     season, season_id = lookup._lookup_season_basic(season)
@@ -587,7 +583,8 @@ def ncaa_team_season_roster(school, season):
 
 def ncaa_team_roster(school, seasons):
     """
-    Retrieves a blindly concattenated roster across multiple seasons
+    Retrieves a blindly concattenated roster for a given tea
+     across the given seasons, from stats.ncaa.org
 
     Args:
         school/school_id (str or int): name of school or school_id
@@ -596,8 +593,6 @@ def ncaa_team_roster(school, seasons):
 
     Returns:
         pd.DataFrame
-
-    data from stats.ncaa.org. valid 2013-2022
     """
     if len(seasons) == 1:
         return ncaa_team_season_roster(school, seasons[0])

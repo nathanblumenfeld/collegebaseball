@@ -18,5 +18,11 @@ from .guts import get_player_lu_path, get_player_lu_table, \
     get_rosters_path, get_rosters_table, \
     get_season_linear_weights
 
+import sys
+import warnings
+
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
+
 __version__ = '1.3.0-alpha'
 __author__ = 'Nathan Blumenfeld'

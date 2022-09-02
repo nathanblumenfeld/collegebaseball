@@ -13,13 +13,13 @@ from io import StringIO
 def boydsworld_team_results(school, start, end=None, vs="all",
                             parse_dates=True):
     """
-    A function to scrape game results data from boydsworld.com
+    A function to scrape game results data, from boydsworld.com
     Valid 1992 to 2021, d1 only
 
     Args:
         school (str): team whose games to select
-        start (int): the start year of games
-        end (int):  the end season of games
+        start (int): the start year of games, 1992 <= start <= 2021
+        end (int):  the end season of games, 1992 <= end <= 2021
         vs (str): school to filter games against. default: 'all'
         parse_dates (bool): whether to parse data into datetime64
 

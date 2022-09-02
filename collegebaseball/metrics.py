@@ -210,7 +210,7 @@ def add_batting_metrics(df):
     df.loc[:, 'wOBA'] = df.apply(_calculate_woba, axis=1)
     df.loc[:, 'wRAA'] = df.apply(_calculate_wraa, axis=1)
     df.loc[:, 'wRC'] = df.apply(_calculate_wrc, axis=1)
-    df = _set_metric_dtypes(df, 'batting')
+    df = df.fillna(value=0.00, inplace=False)
     return df
 
 
@@ -322,31 +322,5 @@ def add_pitching_metrics(df):
         df = df.drop(columns=['Pitches/IP'], inplace=False)
     if len(df.loc[df['Pitches/PA'] > 0]) < 1:
         df = df.drop(columns=['Pitches/PA'], inplace=False)
-    df = _set_metric_dtypes(df, 'pitching')
-    return df
-
-
-def _set_metric_dtypes(df, variant):
-    """
-    """
-    cols = df.columns
-    if variant == 'pitching':
-        data_types = {
-            'float32': ['WHIP', 'FIP', 'IP/App', 'Pitches/IP', 'Pitches/App',
-                        'HR-A/PA', 'Pitches/PA', 'BABIP-against', 'BB/9',
-                        'BB/PA', 'K/9', 'K/PA', 'OPS-against', 'OBP-against',
-                        'IP-adj'],
-            'int32': ['1B-A']
-        }
-    elif variant == 'batting':
-        data_types = {
-            'float32': ['OBP', 'BA', 'SLG', 'OPS', 'HR/PA', 'K/PA', 'BB/PA',
-                        'BABIP', 'wOBA', 'wRAA', 'wRC'],
-            'int16': ['PA', '1B']
-        }
-    for i in data_types.keys():
-        for j in data_types[i]:
-            if j in cols:
-                df[j] = df[j].astype(i)
-    df.fillna(value=0.00, inplace=True)
+    df = df.fillna(value=0.00, inplace=False)
     return df
