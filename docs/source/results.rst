@@ -7,31 +7,23 @@ Team Results
 ------------
 .. py:function:: ncaa_scraper.ncaa_team_results(school, season):
    
-   Obtains the results of completed games for a given school/season from stats.ncaa.org
+   Obtains the results of games for a given school in a given season, from stats.ncaa.org
 
    :school: school name (str) or NCAA school_id (int)
    :season: season (int, YYYY) or NCAA season_id (int), valid 2013-2022
-   :returns (pd.DataFrame):
+   :return (pd.DataFrame):
 
 .. py:function:: boydsworld_scraper.boydsworld_team_results(school, start, end=None, vs="all", parse_dates=True):
 
-   A function to scrape game results data from boydsworld.com
-   Valid 1992 to 2021, d1 only
+   A function to scrape Division I game results, from boydsworld.com
 
    :school (str): team whose games to select
-<<<<<<< Updated upstream
-   :start (int): the start year of games
-   :end (int):  the end season of games
-   :vs (str): school to filter games against. default: 'all'
-   :parse_dates (bool): whether to parse data into datetime64
-   :returns (pd.DataFrame): of all games played for a given team inclusive of start & end
-=======
    :start (int): the start year of games, 1992 <= x <= 2022
    :end (int, optional):  the end season of games, 1992 <= x <= 2022
    :vs (str, optional): school to filter games against. default: 'all'
    :parse_dates (bool, optional): whether to parse data into datetime64
    :return (pd.DataFrame): of all games played for a given team inclusive of start & end
->>>>>>> Stashed changes
+
 
 .. py:function:: win_pct.calculate_actual_win_pct(games):
 
@@ -39,7 +31,7 @@ Team Results
    # games won / # games plated
 
    :games (pd.DataFrame): from boydsworld_team_results()
-   :returns (tuple): of actual winning percentage (float), wins (int), ties (int), losses (int)
+   :return (tuple): of actual winning percentage (float), wins (int), ties (int), losses (int)
 
 
 .. py:function:: win_pct.calculate_pythagenpat_win_pct(games):
@@ -52,4 +44,4 @@ Team Results
    Developed by David Smyth and Patriot
 
    :games (pd.DataFrame): from boydsworld_team_results()
-   :returns (tuple): of expected winning percentage as a float, total run differential as int
+   :return (tuple): of expected winning percentage as a float, total run differential as int

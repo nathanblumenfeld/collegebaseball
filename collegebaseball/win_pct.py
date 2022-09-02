@@ -4,7 +4,7 @@ win_pct
 A module to calculate actual and expected winning percentages
 from boysworld.com data
 
-Created by Nathan Blumenfeld in Winter 2022
+created by Nathan Blumenfeld in Winter 2022
 """
 _ROUND_TO = 3
 

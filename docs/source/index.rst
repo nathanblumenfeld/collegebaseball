@@ -18,14 +18,8 @@ including an intuitive API for *stats.ncaa.org*
    results
    metrics
    lookup
+   schools
    :maxdepth: 2
    :caption: Contents:
 
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

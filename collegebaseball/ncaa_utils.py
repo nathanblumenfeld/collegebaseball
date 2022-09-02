@@ -3,7 +3,7 @@ ncaa_utils.py
 
 utilities for collegebaseball's ncaa_scraper
 
-Created by Nathan Blumenfeld in Summer 2022
+created by Nathan Blumenfeld in Summer 2022
 """
 import numpy as np
 
@@ -59,35 +59,38 @@ def _transform_stats(df):
     if 'name' in cols:
         df.loc[:, 'name'] = df.loc[:, 'name'].apply(_format_names)
         df.loc[:, 'name'] = df.loc[:, 'name'].astype('string')
+    if 'Team' in cols:
+        df = df.rename(columns={'Team': 'school_id'}, inplace=False)
+        cols = df.columns
     # need to do this after name formatting, which relies on commas
     df = df.replace(',', '', regex=True)
-    df.fillna(value=0.00, inplace=True)
-    # set dtypes
+    df = df.fillna(value=0.00, inplace=False)
+    # we're going to calculate OBP/BA/SLG ourselves
+    # G and RBI2out are unreliable
+    drops = ['OBPct', 'BA', 'SlgPct', 'RBI2out', 'G']
+    for i in drops:
+        if i in cols:
+            df = df.drop(columns=[i], inplace=False)
     data_types = {
-        'int32': ['opponent_id', 'season_id', 'school_id', 'innings_played',
-                  'game_id', 'runs_scored', 'runs_allowed', 'run_difference',
+        'int8': ['division', 'innings_played'],
+        'int32': ['opponent_id', 'season_id', 'school_id', 'game_id'],
+        'int16': ['runs_scored', 'runs_allowed', 'run_difference',
                   'season', 'GP', 'GS', 'BB', 'Jersey', 'DP', 'H', 'DP' 'R',
                   'ER', 'SO', 'TB', '2B', '3B', 'HR', 'RBI', 'R', 'AB', 'HBP',
                   'SF', 'K', 'SH', 'Picked', 'SB', 'IBB', 'CS', 'OPP DP',
                   'SHO', 'BF', 'P-OAB', '3B-A', '2B-A', 'Bk', 'HR-A', 'WP',
                   'IBB', 'Inh Run', 'Inh Run Score', 'SHA', 'SFA', 'GO',
                   'FO', 'W', 'L', 'HB', 'SV', 'KL', 'pickoffs', 'OrdAppeared',
-                  'App', 'season', 'GDP', 'PO', 'A', 'TC', 'E', 'CI', 'PB',
+                  'App', 'GDP', 'PO', 'A', 'TC', 'E', 'CI', 'PB',
                   'SBA', 'CSB', 'IDP', 'TP'],
         'bool': ['extras'],
         'float': ['ERA', 'IP'],
-        'string': ['Yr', 'Pos', 'date', 'Year']
+        'string': ['Yr', 'Pos', 'date', 'Year', 'school', 'opponent_name', 'school_name']
     }
     for i in data_types.keys():
         for j in data_types[i]:
             if j in cols:
                 df[j] = df[j].astype(i)
-    # we're going to calculate OBP/BA/SLG ourselves
-    # G and RBI2out are unreliable
-    drops = ['OBPct', 'BA', 'SlgPct', 'RBI2out', 'G']
-    for i in drops:
-        if i in cols:
-            df.drop(columns=[i], inplace=True)
     # keeping as 64 byte to leave space for new potential player uuids
     if 'stats_player_seq' in cols:
         df.loc[:, 'stats_player_seq'] = df.stats_player_seq.astype('string')
@@ -105,9 +108,6 @@ def _transform_stats(df):
         df.drop(columns=['Year'], inplace=True)
     if 'Pos' in cols:
         df = df.rename(columns={'Pos': 'pos'}, inplace=False)
-        cols = df.columns
-    if 'Team' in cols:
-        df = df.rename(columns={'Team': 'school_id'}, inplace=False)
         cols = df.columns
     if 'Pitches' in cols:
         df = df.rename(columns={'Pitches': 'pitches'}, inplace=False)
