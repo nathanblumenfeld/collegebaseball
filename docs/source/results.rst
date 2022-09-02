@@ -1,3 +1,4 @@
+============
 Game Results
 ============
 
@@ -17,11 +18,12 @@ Team Results
    A function to scrape Division I game results, from boydsworld.com
 
    :school (str): team whose games to select
-   :start (int): the start year of games, 1992 <= x <= 2021
-   :end (int, optional):  the end season of games, 1992 <= x <= 2021
+   :start (int): the start year of games, 1992 <= x <= 2022
+   :end (int, optional):  the end season of games, 1992 <= x <= 2022
    :vs (str, optional): school to filter games against. default: 'all'
    :parse_dates (bool, optional): whether to parse data into datetime64
    :return (pd.DataFrame): of all games played for a given team inclusive of start & end
+
 
 .. py:function:: win_pct.calculate_actual_win_pct(games):
 

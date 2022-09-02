@@ -1,6 +1,6 @@
 from .ncaa_scraper import ncaa_team_season_roster, ncaa_team_roster, \
     ncaa_career_stats, ncaa_team_stats, ncaa_team_totals, \
-    ncaa_team_game_logs, ncaa_player_game_logs
+    ncaa_team_game_logs, ncaa_player_game_logs, ncaa_team_results
 from .lookup import lookup_season_ids, lookup_season_reverse, \
     lookup_season_id, lookup_seasons_played, lookup_school, \
     lookup_player, _lookup_season_info, _lookup_school_info, \
@@ -17,6 +17,10 @@ from .guts import get_player_lu_path, get_player_lu_table, \
     get_seasons_path, get_seasons_table, \
     get_rosters_path, get_rosters_table, \
     get_season_linear_weights
+from .download_utils import download_rosters, \
+    download_player_game_logs, download_season_rosters, \
+    download_team_results, download_team_stats, \
+    download_team_totals
 
 import sys
 import warnings

@@ -18,8 +18,9 @@ def boydsworld_team_results(school, start, end=None, vs="all",
 
     Args:
         school (str): team whose games to select
-        start (int): the start year of games, 1992 <= start <= 2021
-        end (int):  the end season of games, 1992 <= end <= 2021
+        start (int): the start year of games, 1992 <= start <= 2022
+        end (int):  the end season of games, 1992 <= end <= 2022
+
         vs (str): school to filter games against. default: 'all'
         parse_dates (bool): whether to parse data into datetime64
 
