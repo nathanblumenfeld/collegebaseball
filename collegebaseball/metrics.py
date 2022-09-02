@@ -32,7 +32,8 @@ def _calculate_woba(row):
     """
     """
     if row['PA'] > 0:
-        season_weights = guts.get_season_linear_weights(row['season'])
+        season_weights = guts.get_season_linear_weights(
+            row['season'], row['division'])
         numerator = (season_weights['wBB'].values[0] * row['BB']
                      + season_weights['wHBP'].values[0] * row['HBP']
                      + season_weights['w1B'].values[0] * row['1B']
@@ -45,8 +46,26 @@ def _calculate_woba(row):
         return 0.00
 
 
+def _calculate_woba_against(row):
+    """
+    """
+    if row['BF'] > 0:
+        season_weights = guts.get_season_linear_weights(
+            row['season'], row['division'])
+        numerator = (season_weights['wBB'].values[0] * row['BB']
+                     + season_weights['wHBP'].values[0] * row['HB']
+                     + season_weights['w1B'].values[0] * row['1B-A']
+                     + season_weights['w2B'].values[0] * row['2B-A']
+                     + season_weights['w3B'].values[0] * row['3B-A']
+                     + season_weights['wHR'].values[0] * row['HR-A'])
+        denominator = row['BF']
+        return round(numerator / denominator, ROUND_TO)
+    else:
+        return 0.00
+
+
 def calculate_woba_manual(plate_appearances, walks, hits_by_pitch, singles,
-                          doubles, triples, homeruns, season):
+                          doubles, triples, homeruns, season, division):
     """
     Calculates wOBA
 
@@ -64,7 +83,7 @@ def calculate_woba_manual(plate_appearances, walks, hits_by_pitch, singles,
         wOBA as a float
     """
     if plate_appearances > 0:
-        season_weights = guts.get_season_linear_weights(season)
+        season_weights = guts.get_season_linear_weights(season, division)
         numerator = (season_weights['wBB'].values[0] * walks
                      + season_weights['wHBP'].values[0] * hits_by_pitch
                      + season_weights['w1B'].values[0] * singles
@@ -81,7 +100,8 @@ def _calculate_wraa(row):
     """
     """
     if row['PA'] > 0:
-        season_weights = guts.get_season_linear_weights(row['season'])
+        season_weights = guts.get_season_linear_weights(
+            row['season'], row['division'])
         return round(((row['wOBA'] - season_weights['wOBA'].values[0])
                      / season_weights['wOBAScale'].values[0])
                      * row['PA'], ROUND_TO)
@@ -122,7 +142,8 @@ def _calculate_wrc(row):
         wRC = [((wOBA - lgwOBA) / wOBAScale) + (lgR / PA))] * PA
     """
     if row['PA'] > 0:
-        season_weights = guts.get_season_linear_weights(row['season'])
+        season_weights = guts.get_season_linear_weights(
+            row['season'], row['division'])
         return round((((row['wOBA'] - season_weights['wOBA'].values[0])
                        / season_weights['wOBAScale'].values[0])
                       + season_weights['R/PA'].values[0])
@@ -131,7 +152,7 @@ def _calculate_wrc(row):
         return 0.00
 
 
-def calculate_wrc_manual(plate_appearances, woba, season):
+def calculate_wrc_manual(plate_appearances, woba, season, division):
     """
     Calculates wRC based on the following formula:
     wRC=[((wOBA - lgwOBA) / wOBAScale) + (lgR / PA))] * PA
@@ -145,7 +166,7 @@ def calculate_wrc_manual(plate_appearances, woba, season):
         The weighted runs created by a player as a float
     """
     if plate_appearances > 0:
-        season_weights = guts.get_season_linear_weights(season)
+        season_weights = guts.get_season_linear_weights(season, division)
         return round((((woba - season_weights['wOBA'].values[0])
                        / season_weights['wOBAScale'].values[0])
                       + season_weights['R/PA'].values[0])
@@ -175,7 +196,7 @@ def add_batting_metrics(df):
     df.loc[:, 'BA'] = round(df['H'] / (
         df['AB']).replace(np.inf, 0), ROUND_TO)
     df.loc[:, 'SLG'] = round((1 * df['1B'] + 2 * df['2B'] + 3 * df['3B']
-                             + 4 * df['HR']) / df['AB'], ROUND_TO)
+                              + 4 * df['HR']) / df['AB'], ROUND_TO)
     df.loc[:, 'OPS'] = round(df['OBP'] + df['SLG'], ROUND_TO)
     df.loc[:, 'ISO'] = round(df['SLG'] - df['BA'], ROUND_TO)
     df.loc[:, 'HR/PA'] = round(df['HR'] / df['PA'], ROUND_TO)
@@ -185,11 +206,11 @@ def add_batting_metrics(df):
                                ).replace(np.inf, 0.0), ROUND_TO)
     df.loc[:, 'BABIP'] = round((df['H'] - df['HR'])
                                / (df['AB'] - df['K'] - df['HR']
-                               + df['SF']), ROUND_TO)
+                                  + df['SF']), ROUND_TO)
     df.loc[:, 'wOBA'] = df.apply(_calculate_woba, axis=1)
     df.loc[:, 'wRAA'] = df.apply(_calculate_wraa, axis=1)
     df.loc[:, 'wRC'] = df.apply(_calculate_wrc, axis=1)
-    df = _set_metric_dtypes(df, 'batting')
+    df = df.fillna(value=0.00, inplace=False)
     return df
 
 
@@ -205,7 +226,8 @@ def _calculate_fip(row):
     """
     """
     if row['IP-adj'] > 0:
-        season_weights = guts.get_season_linear_weights(row['season'])
+        season_weights = guts.get_season_linear_weights(
+            row['season'], row['division'])
         res = round(((13 * row['HR-A'] + 3 * (row['BB'] + row['HB']) - 2 *
                     row['SO']) / row['IP-adj'])
                     + season_weights['cFIP'].values[0], 3)
@@ -214,7 +236,7 @@ def _calculate_fip(row):
         return 0.00
 
 
-def calculate_fip_manual(homeruns, walks, hit_batters, strikeouts, innings_pitched, season):
+def calculate_fip_manual(homeruns, walks, hit_batters, strikeouts, innings_pitched, season, division):
     """
     Calculates FIP bases on the following formula:
         ((HR x 13) + (3 x(BB + HBP)) - (2 x K)) / IP + cFIP
@@ -230,7 +252,7 @@ def calculate_fip_manual(homeruns, walks, hit_batters, strikeouts, innings_pitch
     Returns:
         FIP as a float
     """
-    season_weights = guts.get_season_linear_weights(season)
+    season_weights = guts.get_season_linear_weights(season, division)
     return round(((13 * homeruns + 3 * (walks + hit_batters) - 2 * strikeouts) / innings_pitched)
                  + season_weights['cFIP'].values[0], ROUND_TO)
 
@@ -251,19 +273,19 @@ def add_pitching_metrics(df):
     df['IP-adj'] = df.apply(_adjust_innings_pitched, axis=1)
     df['1B-A'] = df['H']-df['HR-A']-df['3B-A']-df['2B-A']
     df.loc[:, 'OBP-against'] = round((df['H'] + df['BB'] + df['IBB']
-                                     + df['HB']) /
+                                      + df['HB']) /
                                      (df['BF']).replace(np.inf, 0), ROUND_TO)
     df.loc[:, 'BA-against'] = round(df['H'] /
                                     (df['BF'] - df['BB']
-                                     - df['SFA'] - df['SHA']
-                                     - df['HB'] + df['IBB']), ROUND_TO)
+                                    - df['SFA'] - df['SHA']
+                                    - df['HB'] + df['IBB']), ROUND_TO)
     df.loc[:, 'SLG-against'] = round((1 * df['1B-A']
-                                     + 2 * df['2B-A']
+                                      + 2 * df['2B-A']
                                      + 3 * df['3B-A']
                                      + 4 * df['HR-A'])
                                      / (df['BF'] - df['BB'] - df['SFA']
-                                     - df['SHA'] - df['HB']
-                                     + df['IBB']), ROUND_TO)
+                                        - df['SHA'] - df['HB']
+                                        + df['IBB']), ROUND_TO)
     df.loc[:, 'OPS-against'] = round(df['OBP-against'] +
                                      df['SLG-against'], ROUND_TO)
     df.loc[:, 'K/PA'] = round(df['SO']
@@ -273,10 +295,10 @@ def add_pitching_metrics(df):
     df.loc[:, 'BB/PA'] = round(df['BB']
                                / (df['BF']).replace(np.inf, 0), ROUND_TO)
     df.loc[:, 'BB/9'] = round(9 * (df['BB'] /
-                              (df['IP-adj']).replace(np.inf, 0)), ROUND_TO)
+                                   (df['IP-adj']).replace(np.inf, 0)), ROUND_TO)
     df.loc[:, 'BABIP-against'] = round((df['H'] - df['HR-A'])
                                        / (df['BF'] - df['SO']
-                                       - df['HR-A'] + df['SFA']), ROUND_TO)
+                                          - df['HR-A'] + df['SFA']), ROUND_TO)
     df.loc[:, 'FIP'] = df.apply(_calculate_fip, axis=1)
     df.loc[:, 'WHIP'] = round(
         ((df['H']+df['BB']) / (df['IP-adj'])).replace(np.inf, 0), ROUND_TO)
@@ -295,35 +317,10 @@ def add_pitching_metrics(df):
                                   ).replace(np.inf, 0), ROUND_TO)
     df.loc[:, 'GO/FO'] = round((df['GO'] / (df['FO'])
                                 ).replace(np.inf, 0), ROUND_TO)
+    df.loc[:, 'wOBA-against'] = df.apply(_calculate_woba_against, axis=1)
     if len(df.loc[df['Pitches/IP'] > 0]) < 1:
         df = df.drop(columns=['Pitches/IP'], inplace=False)
     if len(df.loc[df['Pitches/PA'] > 0]) < 1:
         df = df.drop(columns=['Pitches/PA'], inplace=False)
-    df = _set_metric_dtypes(df, 'pitching')
-    return df
-
-
-def _set_metric_dtypes(df, variant):
-    """
-    """
-    cols = df.columns
-    if variant == 'pitching':
-        data_types = {
-            'float32': ['WHIP', 'FIP', 'IP/App', 'Pitches/IP', 'Pitches/App',
-                        'HR-A/PA', 'Pitches/PA', 'BABIP-against', 'BB/9',
-                        'BB/PA', 'K/9', 'K/PA', 'OPS-against', 'OBP-against',
-                        'IP-adj'],
-            'int32': ['1B-A']
-        }
-    elif variant == 'batting':
-        data_types = {
-            'float32': ['OBP', 'BA', 'SLG', 'OPS', 'HR/PA', 'K/PA', 'BB/PA',
-                        'BABIP', 'wOBA', 'wRAA', 'wRC'],
-            'int16': ['PA', '1B']
-        }
-    for i in data_types.keys():
-        for j in data_types[i]:
-            if j in cols:
-                df[j] = df[j].astype(i)
-    df.fillna(value=0.00, inplace=True)
+    df = df.fillna(value=0.00, inplace=False)
     return df

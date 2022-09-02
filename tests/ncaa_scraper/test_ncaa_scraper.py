@@ -28,19 +28,20 @@ def generate_career_stats():
 @ pytest.fixture()
 def generate_team_totals():
     df = guts.get_schools_table()
-    teams = df.sample(5)['school_id'].unique()
-    # teams = [167, 641, 9081, 973]  # 1257
+    # teams = df.sample(5)['school_id'].unique()
+    teams = [167, 641, 9081, 973, 339, 1257, 335]  # 1257
     seasons = [x for x in range(2013, 2022)]
-    splits = ['vs_LH']  # None, 'vs_RH', 'bases_empty', 'two_outs'
     generated_data = []
     for team in teams:
         for season in seasons:
             for variant in ['batting', 'pitching', 'fielding']:
-                for split in splits:
-                    sleep(random.uniform(0, _TIMEOUT))
-                    generated_data.append(ncaa.ncaa_team_totals(
-                        int(team), season, variant, include_advanced=False,
-                        split=split))
+                sleep(random.uniform(0, _TIMEOUT))
+                new = ncaa.ncaa_team_totals(
+                    int(team), season, variant, include_advanced=True,
+                    split=None)
+                new.to_csv('tests/data/test_team_totals_'+str(team)+'_' +
+                           str(season)+'_'+str(variant)+'.csv', index=False)
+                generated_data.append(new)
     return generated_data
 
 
@@ -70,7 +71,6 @@ def generate_team_season_roster():
         data = ncaa.ncaa_team_season_roster(i[0], i[1])
         generated_data.append(data)
     return generated_data
-    pass
 
 
 @ pytest.fixture()
@@ -78,18 +78,17 @@ def generate_team_stats():
     df = guts.get_schools_table()
     teams = df.sample(5)['school_id'].unique()
     seasons = [x for x in range(2013, 2023)]
-    splits = [None, 'vs_LH', 'vs_RH', 'two_outs', 'bases_loaded']
     generated_data = []
     for team in teams:
         for season in seasons:
             for variant in ['batting', 'pitching', 'fielding']:
-                if variant == 'fielding':
-                    splits = [None]
-                for split in splits:
-                    sleep(random.uniform(0, _TIMEOUT))
-                    generated_data.append(ncaa.ncaa_team_stats(
-                        int(team), season, variant, include_advanced=False,
-                        split=split))
+                sleep(random.uniform(0, _TIMEOUT))
+                new = ncaa.ncaa_team_stats(
+                    int(team), season, variant, include_advanced=True,
+                    split=None)
+                new.to_csv('tests/data/test_team_stats_'+str(team)+'_' +
+                           str(season)+'_'+str(variant)+'.csv', index=False)
+                generated_data.append(new)
     return generated_data
 
 
@@ -105,7 +104,10 @@ def generate_team_game_logs():
             for variant in ['batting', 'pitching', 'fielding']:
                 sleep(random.uniform(0, _TIMEOUT))
                 print(str(team)+' | '+str(season)+' | ' + variant)
-                data = ncaa.ncaa_team_game_logs(int(team), season, variant)
+                data = ncaa.ncaa_team_game_logs(
+                    int(team), season, variant, include_advanced=True)
+                data.to_csv('tests/data/test_team_game_logs_'+str(team)+'_' +
+                            str(season)+'_'+str(variant)+'.csv', index=False)
                 generated_data.append(data)
     return generated_data
 
@@ -115,7 +117,9 @@ def generate_team_results():
     tests = [
         ("Cornell", 2022),
         ("Texas", 2018),
-        ("Auburn", 2013)
+        ("Auburn", 2013),
+        ("Kutztown", 2015),
+        ("NYU", 2019)
     ]
     generated_data = []
     for i in tests:
@@ -138,7 +142,10 @@ def generate_player_game_logs():
     generated_data = []
     for i in players:
         sleep(random.uniform(0, _TIMEOUT))
-        data = ncaa.ncaa_player_game_logs(i[0], i[1], i[2])
+        data = ncaa.ncaa_player_game_logs(
+            i[0], i[1], i[2], include_advanced=True)
+        data.to_csv('tests/data/test_player_game_logs_'+str(i[0])+'_' +
+                    str(i[1])+'_'+str(i[2])+'.csv', index=False)
         generated_data.append(data)
     return generated_data
 

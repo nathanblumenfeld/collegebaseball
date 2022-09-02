@@ -3,7 +3,7 @@ lookup.py
 
 lookup functions for collegebaseball
 
-Created by Nathan Blumenfeld in Summer 2022
+created by Nathan Blumenfeld in Summer 2022
 """
 
 from collegebaseball import guts
@@ -59,6 +59,22 @@ def lookup_season_id(season):
     return int(season_id)
 
 
+def lookup_season_id_reverse(season_id):
+    """
+    A function that finds the year_stat_category_ids for a given season
+
+    Args:
+        season (int, YYYY)
+
+    Returns:
+        season_id as an int
+    """
+    df = guts.get_seasons_table()
+    season_row = df.loc[df['season_id'] == season_id]
+    season = season_row.values[0][0]
+    return int(season)
+
+
 def lookup_seasons_played(stats_player_seq):
     """
     A function to find the final and debut seasons of a given player
@@ -76,17 +92,17 @@ def lookup_seasons_played(stats_player_seq):
 
 def lookup_school(school_name):
     """
-    A function to find a school's id from it's name
+    A function to find a school's id and division from it's name
 
     Args:
-        school (str): the name of the school
+        school_name (str): the name of the school
 
     Returns:
-        school_id as int
+        tuple of school_id (int) and division (int)
 
     Examples:
         lookup_school("cornell")
-        >>> 167
+        >>> 167, 1
     """
     df = guts.get_schools_table()
     school_row = df.loc[(df.ncaa_name == school_name)]
@@ -95,22 +111,22 @@ def lookup_school(school_name):
     if len(school_row) == 0:
         return f'''could not find school {school_name}'''
     else:
-        return int(school_row['school_id'].values[0])
+        return int(school_row['school_id'].values[0]), int(school_row['division'].values[0])
 
 
 def lookup_school_reverse(school_id):
     """
-    A function to find a school's name from a school_id
+    A function to find a school's name and division from a school_id
 
     Args:
         school_id as int
 
     Returns:
-        school (str): the name of the school
+        tuple of school_name (str), division (int)
 
     Examples:
         lookup_school_reverse(167)
-        >>> "Cornell"
+        >>> "Cornell", 1
     """
     df = guts.get_schools_table()
     school_row = df.loc[(
@@ -118,7 +134,7 @@ def lookup_school_reverse(school_id):
     if len(school_row) == 0:
         return f'''could not find school {school_id}'''
     else:
-        return str(school_row['ncaa_name'].values[0])
+        return str(school_row['ncaa_name'].values[0]), int(school_row['division'].values[0])
 
 
 def lookup_player(player_name, school):
@@ -149,7 +165,7 @@ def lookup_player(player_name, school):
 
 def lookup_player_reverse(player_id, season):
     """
-    A function to find a player's name and school from their player_id 
+    A function to find a player's name and school from their player_id
 
     Args:
         player_id (str): name of player to lookup
@@ -175,11 +191,11 @@ def _lookup_school_info(x):
     """
     if type(x) is int:
         school_id = x
-        ncaa_name = lookup_school_reverse(school_id)
+        ncaa_name, division = lookup_school_reverse(school_id)
     elif type(x) is str:
-        school_id = lookup_school(x)
+        school_id, division = lookup_school(x)
         ncaa_name = x
-    return str(ncaa_name), int(school_id)
+    return str(ncaa_name), int(school_id), int(division)
 
 
 def _lookup_season_info(x):
@@ -195,3 +211,17 @@ def _lookup_season_info(x):
         season, batting_id, pitching_id, fielding_id = lookup_season_reverse(
             x)
     return season, season_id, batting_id, pitching_id, fielding_id
+
+
+def _lookup_season_basic(x):
+    """
+    handling season/season_id input types
+
+    """
+    if len(str(x)) == 4:
+        season = x
+        season_id = lookup_season_id(x)
+    elif len(str(x)) == 5:
+        season_id = x
+        season = lookup_season_id_reverse(x)
+    return season, season_id
