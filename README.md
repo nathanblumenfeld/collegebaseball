@@ -8,8 +8,9 @@
 
 <!-- badges: end -->
 
-`collegebaseball` is Python package for college baseball data acquisition and analysis.
- 
+`collegebaseball` is Python package for college baseball data acquisition and analysis.   
+Documentation is available at: <a href='https://collegebaseball.readthedocs.io/en/latest/index.html'>readthedocs</a>
+
 ## **Installation** 
 `collegebaseball` is available to download from github
 ```
