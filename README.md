@@ -1,6 +1,7 @@
 # 
+<img src="collegebaseball.png" alt="logo" width="200"/>
 
-# `collegebaseball` <a href='https://github.com/nathanblumenfeld/collegebaseball'/>
+# 
 
 <!-- badges: start -->
 
