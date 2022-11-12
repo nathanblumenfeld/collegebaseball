@@ -19,7 +19,7 @@ Documentation is available at: <a href='https://collegebaseball.readthedocs.io/e
 pip install git+https://github.com/nathanblumenfeld/collegebaseball
 ``` 
 ## Planned Feature Additions
-- [ ] Splits for game logs
+- [X] Splits for game logs
 - [ ] Team Schedules
 - [ ] Play-by-Play Data
 - [ ] Linear Weight Calculation Tools
