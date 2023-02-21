@@ -17,7 +17,7 @@ from time import sleep
 _TIMEOUT = 1
 
 
-def download_rosters(seasons: list[int], divisions: list[int], save=True):
+def download_rosters(seasons: list, divisions: list, save=True):
     res = pd.DataFrame()
     failures = []
     for season in seasons:
@@ -85,7 +85,7 @@ def download_team_results(season: int, division=1, save=True):
     return res, failures
 
 
-def download_team_stats(seasons: list[int], variant: str, divisions: list[int], save=True):
+def download_team_stats(seasons: list, variant: str, divisions: list, save=True):
     """
     """
     failures = []
@@ -117,7 +117,7 @@ def download_team_stats(seasons: list[int], variant: str, divisions: list[int], 
     return res
 
 
-def download_team_totals(seasons: list[int], variant: str, divisions: list[int], save=True):
+def download_team_totals(seasons: list, variant: str, divisions: list, save=True):
     """
     """
     failures = []
