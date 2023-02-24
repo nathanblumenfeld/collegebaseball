@@ -651,6 +651,15 @@ player_gamelog_headers = {
 # so this in -elegant solution is what we have
 available_stat_ids = {
     'batting': {
+        2023: {
+            'two_outs': '17280',
+            'vs_RH': '17281',
+            'runners_on': '17286',
+            'with_RISP': '17293',
+            'vs_LH': '17288',
+            'bases_empty': '17294',
+            'bases_loaded': '17295'
+            },
         2022: {
             'two_outs': '17200',
             'vs_RH': '17201',
@@ -752,6 +761,15 @@ available_stat_ids = {
         }
     },
     'pitching': {
+        2023: {
+            'runners_on': '17297',
+            'vs_LH': '17298',
+            'two_outs': '17299',
+            'bases_empty': '17300',
+            'with_RISP': '17301',
+            'bases_loaded': '17304',
+            'vs_RH': '17305'
+        },
         2022: {
             'runners_on': '17217',
             'vs_LH': '17218',
