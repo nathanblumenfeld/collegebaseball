@@ -19,12 +19,12 @@ Documentation is available at: <a href='https://collegebaseball.readthedocs.io/e
 pip install git+https://github.com/nathanblumenfeld/collegebaseball
 ``` 
 ## Planned Feature Additions
-- [X] Splits for game logs
+- [ ] Splits for player career stats
 - [ ] Team Schedules
 - [ ] Play-by-Play Data
 - [ ] Linear Weight Calculation Tools
 - [ ] Park Factor Calculation Tools
-- [ ] WRC+
+- [ ] WRC+ and other normalized stats
 
 If you have more ideas or if you are interested in contributing, please reach out to @blumenfeldnate on twitter or email nathanblumenfeld@gmail.com. 
 
