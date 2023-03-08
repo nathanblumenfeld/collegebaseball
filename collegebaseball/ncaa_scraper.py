@@ -536,7 +536,7 @@ def ncaa_team_season_roster(school, season):
         r = s.get(request_body, headers=_HEADERS)
     soup = BeautifulSoup(r.text, features='lxml')
     res = []
-    if (season in [2019, 14781, 2022, 15860]):
+    if (season in [2019, 14781, 2023, 2022, 15860]):
         num_values = 7
         col_names = ['jersey', 'stats_player_seq', 'name', 'position',
                      'height', 'class_year', 'games_played',
@@ -566,6 +566,7 @@ def ncaa_team_season_roster(school, season):
     df.stats_player_seq = df.stats_player_seq.astype('str')
     df.stats_player_seq = df.stats_player_seq.str.replace('=', '')
     df = df.loc[df.stats_player_seq != 'None']
+    df = df.loc[df.games_started.notna()]
     df.stats_player_seq = df.stats_player_seq.astype('int64')
     df['season'] = season
     df['season_id'] = season_id
