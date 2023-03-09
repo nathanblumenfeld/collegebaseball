@@ -180,6 +180,79 @@ def ncaa_career_stats(stats_player_seq, variant, include_advanced=True):
                 df = metrics.add_pitching_metrics(df)
     return df
 
+def ncaa_career_aggregated(stats_player_seq, variant, include_advanced=True):
+    """
+    Obtains career-aggregate stats for a given player's
+    collegiate career, from stats.ncaa.org 
+
+    Args:
+        stats_player_seq (int): the NCAA player_id
+        variant (str): 'batting', 'pitching', or 'fielding'
+        include_advanced (bool, optional). Whether to
+         automatically calcuate advanced metrics, Defaults to True
+
+    Returns:
+        pd.DataFrame
+    """
+    season = lookup.lookup_seasons_played(stats_player_seq)[0]
+    season, season_id, batting_id, pitching_id, fielding_id = lookup._lookup_season_info(
+        season)
+    if variant == 'batting':
+        year_stat_category_id = batting_id
+    elif variant == 'pitching':
+        year_stat_category_id = pitching_id
+    else:
+        year_stat_category_id = fielding_id
+    payload = {'id': str(season_id), 'stats_player_seq': str(stats_player_seq),
+               'year_stat_category_id': str(year_stat_category_id)}
+    url = 'https://stats.ncaa.org/player/index'
+    with Session() as s:
+        r = s.get(url, params=payload, headers=_HEADERS)
+    if r.status_code == 403:
+        print('403 Error: NCAA blocked request')
+        return pd.DataFrame()
+    soup = BeautifulSoup(r.text, features='lxml')
+    table = soup.find_all('table')[2]
+    headers = []
+    for val in table.find_all('th'):
+        headers.append(val.string.strip())
+    rows = []
+    row = []
+    for val in table.find_all('td'):
+        # print(val, '\n')
+        if 'data-order' in val.attrs:
+            row.append(val['data-order'])
+        elif val.a is not None:
+            row.append(val.a.attrs['href'].split('/')[2])
+        elif val.text.strip() != 'Career' and 'width' not in val.attrs:
+            if row != []:
+                rows.append(row)
+            row = []
+            row.append(val.text.strip())
+        else:
+            if val.text.strip() != 'Career':
+                row.append(val.text.strip())
+    df = pd.DataFrame([row])
+    df.insert(1, 'tm', [0])
+    df.columns = headers
+    df['Year'] = 0
+    df = ncaa_utils._transform_stats(df)
+    df['division'] = 0
+    df['school'] = 0
+    df['division'] = df['division'].astype('int8')
+    df['school'] = df['school'].astype('string')
+    df['season'] = 0
+    if variant == 'batting':
+        if include_advanced:
+            if len(df) > 0:
+                df = metrics.add_batting_metrics(df, season=False)
+                df = df.loc[df.PA > 0]
+    elif variant == 'pitching':
+        if include_advanced:
+            if len(df) > 0:
+                df = metrics.add_pitching_metrics(df, season=False)
+    return df
+
 
 def ncaa_team_totals(school, season, variant, include_advanced=True,
                      split=None):
