@@ -169,6 +169,7 @@ def ncaa_career_stats(stats_player_seq, variant, include_advanced=True):
     df['school'] = school
     df['division'] = df['division'].astype('int8')
     df['school'] = df['school'].astype('string')
+    df['season'] = df['season'] + 1
     if variant == 'batting':
         if include_advanced:
             if len(df) > 0:
