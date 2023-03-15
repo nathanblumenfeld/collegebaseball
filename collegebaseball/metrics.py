@@ -175,7 +175,7 @@ def calculate_wrc_manual(plate_appearances, woba, season, division):
         return 0.00
 
 
-def add_batting_metrics(df):
+def add_batting_metrics(df, season = True):
     """
     Adds the following columns to a given DataFrame:
 
@@ -184,6 +184,7 @@ def add_batting_metrics(df):
 
     Args:
         df(DataFrame): the DataFrame to append additional stats to
+        season(bool): whether the advanced metrics are for a season or career (defaults to True)
 
     Returns:
         DataFrame of stats with additional columns
@@ -207,9 +208,14 @@ def add_batting_metrics(df):
     df.loc[:, 'BABIP'] = round((df['H'] - df['HR'])
                                / (df['AB'] - df['K'] - df['HR']
                                   + df['SF']), ROUND_TO)
-    df.loc[:, 'wOBA'] = df.apply(_calculate_woba, axis=1)
-    df.loc[:, 'wRAA'] = df.apply(_calculate_wraa, axis=1)
-    df.loc[:, 'wRC'] = df.apply(_calculate_wrc, axis=1)
+    if season:
+        df.loc[:, 'wOBA'] = df.apply(_calculate_woba, axis=1)
+        df.loc[:, 'wRAA'] = df.apply(_calculate_wraa, axis=1)
+        df.loc[:, 'wRC'] = df.apply(_calculate_wrc, axis=1)
+    else:
+        df['wOBA'] = np.nan
+        df['wRAA'] = np.nan
+        df['wRC'] = np.nan
     df = df.fillna(value=0.00, inplace=False)
     return df
 
@@ -257,7 +263,7 @@ def calculate_fip_manual(homeruns, walks, hit_batters, strikeouts, innings_pitch
                  + season_weights['cFIP'].values[0], ROUND_TO)
 
 
-def add_pitching_metrics(df):
+def add_pitching_metrics(df, season = True):
     """
     Adds the following columns to a given DataFrame:
         PA, 1B-A, OBP-against, BA-against, SLG-against, OPS-against
@@ -266,6 +272,7 @@ def add_pitching_metrics(df):
 
     Args:
         df(DataFrame): the DataFrame to append additional stats to
+        season(bool): whether the advanced metrics are for a season or career (defaults to True)
 
     Returns:
         DataFrame of stats with additional columns
@@ -299,7 +306,12 @@ def add_pitching_metrics(df):
     df.loc[:, 'BABIP-against'] = round((df['H'] - df['HR-A'])
                                        / (df['BF'] - df['SO']
                                           - df['HR-A'] + df['SFA']), ROUND_TO)
-    df.loc[:, 'FIP'] = df.apply(_calculate_fip, axis=1)
+    if season:
+        df.loc[:, 'FIP'] = df.apply(_calculate_fip, axis=1)
+        df.loc[:, 'wOBA-against'] = df.apply(_calculate_woba_against, axis=1)
+    else:
+        df.loc[:, 'FIP'] = np.nan
+        df.loc[:, 'wOBA-against'] = np.nan
     df.loc[:, 'WHIP'] = round(
         ((df['H']+df['BB']) / (df['IP-adj'])).replace(np.inf, 0), ROUND_TO)
     df.loc[:, 'Pitches/IP'] = round(
@@ -317,7 +329,6 @@ def add_pitching_metrics(df):
                                   ).replace(np.inf, 0), ROUND_TO)
     df.loc[:, 'GO/FO'] = round((df['GO'] / (df['FO'])
                                 ).replace(np.inf, 0), ROUND_TO)
-    df.loc[:, 'wOBA-against'] = df.apply(_calculate_woba_against, axis=1)
     if len(df.loc[df['Pitches/IP'] > 0]) < 1:
         df = df.drop(columns=['Pitches/IP'], inplace=False)
     if len(df.loc[df['Pitches/PA'] > 0]) < 1:
