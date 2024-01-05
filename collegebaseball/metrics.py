@@ -316,7 +316,7 @@ def add_pitching_metrics(df, season = True):
         ((df['H']+df['BB']) / (df['IP-adj'])).replace(np.inf, 0), ROUND_TO)
     df.loc[:, 'Pitches/IP'] = np.where(
         df['IP-adj'] != 0,
-        (df['pitches'] / df['IP-adj']).round(ROUND_TO),
+        (df['pitches'] / df['IP-adj']).apply(lambda x: round(x, ROUND_TO)),
         0)
     if 'App' in df.columns:
         df.loc[:, 'IP/App'] = round((df['IP-adj'] / (df['App'])
