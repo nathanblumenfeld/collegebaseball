@@ -10,7 +10,7 @@ setuptools.setup(
     long_description=open('DESCRIPTION.rst').read(),
     packages=setuptools.find_packages(),
     install_requires=["pandas", "numpy",
-                      "requests", "lxml", "bs4", "importlib", "tqdm"],
+                      "requests", "lxml", "bs4", "tqdm"],
     keywords=["baseball", "ncaa", "ncaa_baseball",
               "college_baseball", "college_sports"],
     classifiers=[
