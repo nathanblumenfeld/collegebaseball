@@ -1,3 +1,3 @@
 [build-system]
-requires = ["setuptools ~= 58.0", "wheel", "pandas", "numpy", "requests", "lxml", "bs4", "importlib", "tqdm"]
+requires = ["setuptools ~= 58.0", "wheel", "pandas", "numpy", "requests", "lxml", "bs4", "tqdm"]
 build-backend = "setuptools.build_meta"
